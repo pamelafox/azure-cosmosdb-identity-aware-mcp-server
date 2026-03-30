@@ -1,0 +1,66 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "name": {
+        "value": "${AZURE_ENV_NAME}"
+      },
+      "location": {
+        "value": "${AZURE_LOCATION}"
+      },
+      "principalId": {
+        "value": "${AZURE_PRINCIPAL_ID}"
+      },
+      "openTelemetryPlatform": {
+        "value": "${OPENTELEMETRY_PLATFORM=appinsights}"
+      },
+      "useVnet": {
+        "value": "${USE_VNET=false}"
+      },
+      "usePrivateIngress": {
+        "value": "${USE_PRIVATE_INGRESS=false}"
+      },
+      "usePrivateAcr": {
+        "value": "${USE_PRIVATE_ACR=false}"
+      },
+      "usePrivateLogAnalytics": {
+        "value": "${USE_PRIVATE_LOGANALYTICS=false}"
+      },
+      "mcpAuthProvider": {
+        "value": "${MCP_AUTH_PROVIDER=none}"
+      },
+      "serverExists": {
+        "value": "${SERVICE_SERVER_RESOURCE_EXISTS=false}"
+      },
+      "agentExists": {
+        "value": "${SERVICE_AGENT_RESOURCE_EXISTS=false}"
+      },
+      "keycloakExists": {
+        "value": "${SERVICE_KEYCLOAK_RESOURCE_EXISTS=false}"
+      },
+      "keycloakAdminUser": {
+        "value": "${KEYCLOAK_ADMIN_USER=admin}"
+      },
+      "keycloakAdminPassword": {
+        "value": "${KEYCLOAK_ADMIN_PASSWORD}"
+      },
+      "keycloakRealmName": {
+        "value": "${KEYCLOAK_REALM_NAME=mcp}"
+      },
+      "keycloakMcpServerAudience": {
+        "value": "${KEYCLOAK_MCP_SERVER_AUDIENCE=mcp-server}"
+      },
+      "entraProxyClientId": {
+        "value": "${ENTRA_PROXY_AZURE_CLIENT_ID}"
+      },
+      "entraProxyClientSecret": {
+        "value": "${ENTRA_PROXY_AZURE_CLIENT_SECRET}"
+      },
+      "entraAdminGroupId": {
+        "value": "${ENTRA_ADMIN_GROUP_ID}"
+      },
+      "logfireToken": {
+        "value": "${LOGFIRE_TOKEN}"
+      }
+    }
+  }
