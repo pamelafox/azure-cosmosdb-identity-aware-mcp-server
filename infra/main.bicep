@@ -181,17 +181,16 @@ module registration 'appregistration.bicep' = {
   }
 }
 
-// Configure Easy Auth on App Service (passes all app settings to avoid list() circular dependency)
+// Set Entra env vars on App Service (after registration is created to avoid circular dependency)
 module appupdate 'appupdate.bicep' = {
   name: 'appupdate'
   scope: resourceGroup
   params: {
     appServiceName: web.outputs.name
-    clientId: registration.outputs.clientAppId
-    openIdIssuer: issuer
-    prmScope: registration.outputs.userImpersonationScope
     appSettings: union(serverAppSettings, {
       OVERRIDE_USE_MI_FIC_ASSERTION_CLIENTID: web.outputs.identityClientId
+      ENTRA_PROXY_AZURE_CLIENT_ID: registration.outputs.clientAppId
+      AZURE_TENANT_ID: tenant().tenantId
     })
   }
 }

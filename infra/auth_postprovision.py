@@ -27,6 +27,8 @@ from msgraph.generated.models.pre_authorized_application import PreAuthorizedApp
 from msgraph.generated.models.required_resource_access import RequiredResourceAccess
 from msgraph.generated.models.resource_access import ResourceAccess
 from msgraph.generated.models.spa_application import SpaApplication
+from msgraph.generated.models.o_auth2_permission_grant import OAuth2PermissionGrant
+from msgraph.generated.models.service_principal import ServicePrincipal
 from msgraph.generated.models.web_application import WebApplication
 
 LOCAL_DEV_APP_DISPLAY_NAME = "MCP Expense Server (Local Dev)"
@@ -97,6 +99,36 @@ async def create_app_registration(graph_client: GraphServiceClient) -> tuple[str
     return object_id, client_id
 
 
+async def create_service_principal_and_grant_consent(
+    graph_client: GraphServiceClient, client_id: str
+) -> None:
+    """Create a service principal and grant admin consent for Graph API OBO flow."""
+    print("Creating service principal for local dev app...")
+    sp = await graph_client.service_principals.post(
+        ServicePrincipal(app_id=client_id, display_name=LOCAL_DEV_APP_DISPLAY_NAME)
+    )
+    if sp is None or sp.id is None:
+        raise ValueError("Failed to create service principal")
+    print(f"Created service principal: {sp.id}")
+
+    # Find the Graph API service principal
+    graph_app_id = "00000003-0000-0000-c000-000000000000"
+    graph_sp = await graph_client.service_principals_with_app_id(graph_app_id).get()
+    if graph_sp is None or graph_sp.id is None:
+        raise ValueError("Failed to find Graph API service principal")
+
+    print("Granting admin consent for Graph API scopes (OBO flow)...")
+    await graph_client.oauth2_permission_grants.post(
+        OAuth2PermissionGrant(
+            client_id=sp.id,
+            consent_type="AllPrincipals",
+            resource_id=graph_sp.id,
+            scope="User.Read email offline_access openid profile",
+        )
+    )
+    print("Admin consent granted for Graph API scopes.")
+
+
 async def create_client_secret(graph_client: GraphServiceClient, object_id: str) -> str:
     """Create a client secret for the app registration. Returns the secret text."""
     print("Creating client secret for local dev app...")
@@ -125,6 +157,8 @@ async def main():
 
     object_id, client_id = await create_app_registration(graph_client)
     update_azd_env("ENTRA_PROXY_AZURE_CLIENT_ID", client_id)
+
+    await create_service_principal_and_grant_consent(graph_client, client_id)
 
     secret = await create_client_secret(graph_client, object_id)
     update_azd_env("ENTRA_PROXY_AZURE_CLIENT_SECRET", secret)
