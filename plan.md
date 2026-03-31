@@ -62,9 +62,13 @@ Same as Option 1 but we only enable CIMD, not DCR. FastMCP still proxies the OAu
 ✅ Pros: More secure than full DCR (only known CIMD clients accepted). Works with VS Code.
 ❌ Cons: Still requires a client secret. Server still proxies all OAuth endpoints. Only works with CIMD-capable clients.
 
-### Option 3: `RemoteAuthProvider` with `AzureJWTVerifier` (direct Entra auth)
+### Option 3: `RemoteAuthProvider` + pre-registered VS Code (direct Entra auth)
 
-FastMCP's `RemoteAuthProvider` serves only `/.well-known/oauth-protected-resource` (PRM endpoint per RFC 9728), pointing the client directly to Entra's authorization server. The MCP client talks to Entra directly — no proxy.
+FastMCP's `RemoteAuthProvider` serves only `/.well-known/oauth-protected-resource` (PRM endpoint per RFC 9728), pointing the client directly to Entra's authorization server. The MCP client talks to Entra directly — no proxy. Pre-registering VS Code's Entra GUID as a `preAuthorizedApplication` makes this work end-to-end.
+
+**How it works**: When the PRM's `authorization_servers` points directly to Entra, VS Code recognizes this and uses its own first-party Entra GUID (`aebc6443-996d-45c2-90f0-388ff96faa56`) via the macOS/Windows authentication broker (Company Portal / WAM). It does NOT send the CIMD URL to Entra — so the CIMD incompatibility with Entra is irrelevant.
+
+**Server code**:
 
 ```python
 verifier = AzureJWTVerifier(
@@ -79,7 +83,7 @@ auth = RemoteAuthProvider(
 )
 ```
 
-PRM response looks like:
+**PRM response** (the only endpoint the server hosts):
 
 ```json
 {
@@ -90,22 +94,13 @@ PRM response looks like:
 }
 ```
 
-✅ Pros: No proxy, no client secret needed on the server. Server just validates JWTs. Cleanest architecture.
-❌ Cons: VS Code sends `client_id=https://vscode.dev/oauth/client-metadata.json` to Entra's `/authorize`, and Entra rejects URL-based client IDs. **Unless** combined with Option 4 (pre-registration).
+**Entra app registration requirements**:
 
-### Option 4: Pre-register VS Code's GUID in Entra + `RemoteAuthProvider`
-
-Register VS Code's known Entra app GUID (`aebc6443-996d-45c2-90f0-388ff96faa56`) as a `preAuthorizedApplication` on the server's app registration. This allows VS Code to call the server on behalf of the signed-in user.
-
-**Initial assumption was wrong**: We assumed VS Code would always send the CIMD URL to Entra. In reality, when the PRM's `authorization_servers` points directly to Entra, VS Code recognizes this and uses its own first-party Entra GUID (`aebc6443-...`) via the macOS/Windows authentication broker (Company Portal / WAM). It does NOT send the CIMD URL to Entra.
-
-**Requirements for this to work**:
-
-1. App registration must have `identifierUris: ['api://{appId}']` (establishes the `api://` namespace)
-2. App registration must expose a `user_impersonation` OAuth2 permission scope
-3. VS Code's GUID must be in `preAuthorizedApplications` with the `user_impersonation` scope ID
-4. App manifest must have `requestedAccessTokenVersion: 2` (FastMCP's `AzureJWTVerifier` only supports v2.0 tokens)
-5. Must use explicit tenant ID in `authorization_servers` (not `/common` — see [VS Code issue #283453](https://github.com/microsoft/vscode/issues/283453))
+1. `identifierUris: ['api://{appId}']` — establishes the `api://` namespace
+2. Expose a `user_impersonation` OAuth2 permission scope
+3. VS Code's GUID (`aebc6443-996d-45c2-90f0-388ff96faa56`) in `preAuthorizedApplications` with the scope ID
+4. `requestedAccessTokenVersion: 2` — FastMCP's `AzureJWTVerifier` only supports v2.0 tokens
+5. Explicit tenant ID in `authorization_servers` (not `/common` — see [VS Code issue #283453](https://github.com/microsoft/vscode/issues/283453))
 
 **App registration Bicep** (key parts):
 
@@ -138,10 +133,10 @@ resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
 * The Bicep Microsoft Graph extension may not update `preAuthorizedApplications` on existing app registrations — may need to delete and recreate
 * On macOS, VS Code uses the Company Portal broker — initial attempt failed with `platform_broker_error` because pre-authorization wasn't applied yet
 
-✅ Pros: No proxy, no client secret on server. Server just validates JWTs. Works with VS Code (tested!). Cleanest option.
-❌ Cons: Requires pre-registering each MCP client's GUID (only works with known clients). Local dev still needs a client secret for OBO/Graph calls (separate app registration).
+✅ Pros: No proxy, no client secret on server. Server just validates JWTs. Works with VS Code (tested!). Cleanest architecture. Same code path local and production.
+❌ Cons: Requires pre-registering each MCP client's GUID (only works with known clients). Local dev uses a separate app registration with client secret for OBO/Graph calls.
 
-### Verified: Option 3 + 4 combined works locally
+### Verified: Option 3 works locally
 
 Tested successfully on 2026-03-31. Logs show VS Code authenticating directly with Entra (no proxy endpoints):
 
@@ -158,7 +153,7 @@ INFO:     ExpensesMCP: Adding expense: $20.0 for Avocado toast on 2026-03-31
 
 Key differences from proxy logs: No `/authorize`, `/token`, `/consent`, or `/auth/callback` on the server. VS Code went directly to Entra, got a token, and sent it to `/mcp`.
 
-### Option 5: Azure App Service / Container Apps / Functions Built-in Auth (Easy Auth)
+### Option 4: Azure App Service / Container Apps / Functions Built-in Auth (Easy Auth)
 
 The hosting platform handles OAuth at the infrastructure level. Configure Easy Auth with:
 
@@ -169,11 +164,12 @@ The hosting platform handles OAuth at the infrastructure level. Configure Easy A
 * Server receives authenticated requests with `X-MS-CLIENT-PRINCIPAL` / `X-MS-CLIENT-PRINCIPAL-ID` headers
 
 Docs: <https://learn.microsoft.com/en-us/azure/app-service/configure-authentication-mcp-server-vscode>
+Functions example: <https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python/>
 
 ✅ Pros: Auth at infrastructure layer (defense in depth). Keyless (FIC, no secrets). Platform handles CIMD translation. Works with App Service, Container Apps, Functions.
 ❌ Cons: Can't test locally (no Easy Auth locally). Only works with pre-authorized clients.
 
-### Our approach: Option 3+4 (local and production)
+### Our approach: Option 3 (local and production)
 
 **Primary approach**: `RemoteAuthProvider` + `AzureJWTVerifier` + pre-registered VS Code GUID. Works both locally and in production — same code path everywhere.
 
@@ -182,7 +178,7 @@ Docs: <https://learn.microsoft.com/en-us/azure/app-service/configure-authenticat
 * **Local dev app**: Separate app registration with client secret (for OBO/Graph API calls). Created by `infra/auth_postprovision.py`.
 * **Production app**: Created by Bicep (`infra/appregistration.bicep`). Uses FIC with managed identity for Cosmos DB access (but no client secret needed for MCP auth — server just validates JWTs).
 
-**Fallback option kept in Bicep**: Easy Auth (Option 5) configuration remains in the Bicep templates as an alternative. Could be useful if we need defense-in-depth or want to support non-pre-authorized clients.
+**Fallback option kept in Bicep**: Easy Auth (Option 4) configuration remains in the Bicep templates as an alternative. Could be useful if we need defense-in-depth or want to support non-pre-authorized clients.
 
 **Security**: Two separate app registrations — a leaked local dev secret can't impersonate the production app.
 

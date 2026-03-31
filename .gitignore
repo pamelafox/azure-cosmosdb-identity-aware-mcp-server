@@ -1,3 +1,6 @@
+# Compiled ARM template
+infra/main.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
