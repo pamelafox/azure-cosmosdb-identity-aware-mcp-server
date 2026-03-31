@@ -18,13 +18,11 @@ from azure.core.settings import settings
 from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import DefaultAzureCredential, ManagedIdentityCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
-from cosmosdb_store import CosmosDBStore
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
 from fastmcp.server.auth.providers.azure import AzureProvider
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import Middleware, MiddlewareContext
-from key_value.aio.stores.memory import MemoryStore
 from msal import ConfidentialClientApplication, TokenCache
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
 from rich.console import Console
@@ -83,15 +81,11 @@ cosmos_db = cosmos_client.get_database_client(os.environ["AZURE_COSMOSDB_DATABAS
 cosmos_container = cosmos_db.get_container_client(os.environ["AZURE_COSMOSDB_USER_CONTAINER"])
 
 # Configure authentication provider
-# Azure/Entra ID authentication using AzureProvider
+# Azure/Entra ID authentication using AzureProvider with CIMD (static client registration)
 # When running locally, always use localhost for base URL (OAuth redirects need to match)
-oauth_client_store = None
 if RUNNING_IN_PRODUCTION:
-    oauth_container = cosmos_db.get_container_client(os.environ["AZURE_COSMOSDB_OAUTH_CONTAINER"])
-    oauth_client_store = CosmosDBStore(container=oauth_container, default_collection="oauth-clients")
     entra_base_url = os.environ["ENTRA_PROXY_MCP_SERVER_BASE_URL"]
 else:
-    oauth_client_store = MemoryStore()
     entra_base_url = "http://localhost:8000"
 auth = AzureProvider(
     client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
@@ -99,9 +93,9 @@ auth = AzureProvider(
     tenant_id=os.environ["AZURE_TENANT_ID"],
     base_url=entra_base_url,
     required_scopes=["mcp-access"],
-    client_storage=oauth_client_store,
+    require_authorization_consent="external",
 )
-logger.info("Using Entra OAuth Proxy for server %s and %s storage", entra_base_url, type(oauth_client_store).__name__)
+logger.info("Using Entra OAuth Proxy for server %s", entra_base_url)
 
 confidential_client = ConfidentialClientApplication(
     client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],

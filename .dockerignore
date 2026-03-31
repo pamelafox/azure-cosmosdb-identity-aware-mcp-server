@@ -2,8 +2,6 @@
 .venv
 .logfire
 .devcontainer
-
-# Exclude most of infra, but allow keycloak files needed for builds
 infra/*.bicep
 infra/*.ps1
 infra/*.sh

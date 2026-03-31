@@ -13,29 +13,6 @@ param location string
 param principalId string = ''
 
 param serverExists bool = false
-param agentExists bool = false
-param keycloakExists bool = false
-
-@description('Location for the OpenAI resource group')
-@allowed([
-  'canadaeast'
-  'eastus'
-  'eastus2'
-  'francecentral'
-  'switzerlandnorth'
-  'uksouth'
-  'japaneast'
-  'northcentralus'
-  'australiaeast'
-  'swedencentral'
-])
-@metadata({
-  azd: {
-    type: 'location'
-  }
-})
-// This does not need a default value, as azd will prompt the user to select a location
-param openAiResourceLocation string
 
 @description('OpenTelemetry platform for monitoring: appinsights, logfire, or none')
 @allowed([
@@ -53,27 +30,6 @@ param useVnet bool = false
 
 @description('Flag to enable or disable public ingress')
 param usePrivateIngress bool = false
-
-@description('Authentication provider for the MCP server')
-@allowed([
-  'none'
-  'keycloak'
-  'entra_proxy'
-])
-param mcpAuthProvider string = 'none'
-
-@description('Keycloak admin username')
-param keycloakAdminUser string = 'admin'
-
-@secure()
-@description('Keycloak admin password - required when mcpAuthProvider is keycloak')
-param keycloakAdminPassword string = ''
-
-@description('Keycloak realm name for MCP authentication')
-param keycloakRealmName string = 'mcp'
-
-@description('Audience claim for MCP server tokens (only used when mcpAuthProvider is keycloak)')
-param keycloakMcpServerAudience string = 'mcp-server'
 
 @description('Flag to restrict ACR public network access (requires VPN for local image push when true)')
 param usePrivateAcr bool = false
@@ -95,12 +51,6 @@ param entraProxyClientSecret string = ''
 @description('Logfire token used by the server container as a secret')
 param logfireToken string = ''
 
-// Derived booleans for backward compatibility in bicep modules
-var useKeycloak = mcpAuthProvider == 'keycloak'
-var useEntraProxy = mcpAuthProvider == 'entra_proxy'
-// Auth is considered enabled when either Keycloak or Entra OAuth Proxy is used
-var authEnabled = useKeycloak || useEntraProxy
-
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 var tags = { 'azd-env-name': name }
 
@@ -112,55 +62,9 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 var prefix = '${name}-${resourceToken}'
 
-var openAiDeploymentName = 'gpt-5.2'
-var openAiModelName = 'gpt-5.2'
-
 // Cosmos DB configuration
 var cosmosDbDatabaseName = 'expenses-database'
-var cosmosDbContainerName = 'expenses'
-var cosmosDbOAuthContainerName = 'oauth-clients'
 var cosmosDbUserContainerName = 'user-expenses'
-
-module openAi 'br/public:avm/res/cognitive-services/account:0.7.2' = {
-  name: 'openai'
-  scope: resourceGroup
-  params: {
-    name: '${resourceToken}-cog'
-    location: openAiResourceLocation
-    tags: tags
-    kind: 'OpenAI'
-    customSubDomainName: '${resourceToken}-cog'
-    publicNetworkAccess: useVnet ? 'Disabled' : 'Enabled'
-    networkAcls: {
-      defaultAction: useVnet ? 'Deny' : 'Allow'
-      bypass: 'AzureServices'
-    }
-    sku: 'S0'
-    diagnosticSettings: useAppInsights
-      ? [
-          {
-            name: 'customSetting'
-            workspaceResourceId: logAnalyticsWorkspace.?outputs.resourceId
-          }
-        ]
-      : []
-    deployments: [
-      {
-        name: openAiDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: openAiModelName
-          version: '2025-12-11'
-        }
-        sku: {
-          name: 'GlobalStandard'
-          capacity: 30
-        }
-      }
-    ]
-    disableLocalAuth: true
-  }
-}
 
 // Cosmos DB for storing expenses
 module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = {
@@ -185,36 +89,16 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = {
     sqlDatabases: [
       {
         name: cosmosDbDatabaseName
-        // Always create the base expenses container; add auth-related containers only when authentication is enabled
-        containers: concat(
-          [
-            {
-              name: cosmosDbContainerName
-              kind: 'Hash'
-              paths: [
-                '/category'
-              ]
-            }
-          ],
-          authEnabled
-            ? [
-                {
-                  name: cosmosDbUserContainerName
-                  kind: 'Hash'
-                  paths: [
-                    '/user_id'
-                  ]
-                }
-                {
-                  name: cosmosDbOAuthContainerName
-                  kind: 'Hash'
-                  paths: [
-                    '/collection'
-                  ]
-                }
-              ]
-            : []
-        )
+        containers: [
+          {
+            name: cosmosDbUserContainerName
+            kind: 'Hash'
+            paths: [
+              '/user_id'
+            ]
+          }
+
+        ]
       }
     ]
   }
@@ -429,22 +313,6 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.6.1' = if (us
   }
 }
 
-// Azure OpenAI Private DNS Zone
-module openAiPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet) {
-  name: 'openai-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.openai.azure.com'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
 // Log Analytics Private DNS Zone
 module logAnalyticsPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
   name: 'log-analytics-dns-zone'
@@ -604,35 +472,6 @@ module containerAppsEnvironmentPrivateEndpoint 'br/public:avm/res/network/privat
   }
 }
 
-module privateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (useVnet) {
-  name: 'privateEndpointDeployment'
-  scope: resourceGroup
-  params: {
-    name: '${prefix}-openai-pe'
-    location: location
-    tags: tags
-    subnetResourceId: virtualNetwork!.outputs.subnetResourceIds[1]
-    privateDnsZoneGroup: {
-      privateDnsZoneGroupConfigs: [
-        {
-          privateDnsZoneResourceId: openAiPrivateDnsZone!.outputs.resourceId
-        }
-      ]
-    }
-    privateLinkServiceConnections: [
-      {
-        name: '${prefix}-openai-pe'
-        properties: {
-          groupIds: [
-            'account'
-          ]
-          privateLinkServiceId: openAi.outputs.resourceId
-        }
-      }
-    ]
-  }
-}
-
 // Azure Monitor Private Link Scope
 module monitorPrivateLinkScope 'br/public:avm/res/insights/private-link-scope:0.7.1' = if (useVnet && useAppInsights) {
   name: 'monitor-private-link-scope'
@@ -761,8 +600,6 @@ module cosmosDbPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.
 
 // Container app for MCP server
 var containerAppDomain = replace('${take(prefix,15)}-server', '--', '-')
-// DRY base URLs for auth providers
-var keycloakMcpServerBaseUrl = 'https://mcproutes.${containerApps.outputs.defaultDomain}'
 var entraProxyMcpServerBaseUrl = 'https://${containerAppDomain}.${containerApps.outputs.defaultDomain}'
 module server 'server.bicep' = {
   name: 'server'
@@ -774,105 +611,18 @@ module server 'server.bicep' = {
     identityName: '${prefix}-id-server'
     containerAppsEnvironmentName: containerApps.outputs.environmentName
     containerRegistryName: containerApps.outputs.registryName
-    openAiDeploymentName: openAiDeploymentName
-    openAiEndpoint: openAi.outputs.endpoint
     cosmosDbAccount: cosmosDb.outputs.name
     cosmosDbDatabase: cosmosDbDatabaseName
-    cosmosDbContainer: cosmosDbContainerName
     cosmosDbUserContainer: cosmosDbUserContainerName
-    cosmosDbOAuthContainer: cosmosDbOAuthContainerName
     applicationInsightsConnectionString: useAppInsights ? applicationInsights!.outputs.connectionString : ''
     openTelemetryPlatform: openTelemetryPlatform
     exists: serverExists
-    // Keycloak authentication configuration (only when enabled)
-    keycloakRealmUrl: useKeycloak ? '${keycloak!.outputs.uri}/auth/realms/${keycloakRealmName}' : ''
-    keycloakMcpServerBaseUrl: useKeycloak ? keycloakMcpServerBaseUrl : ''
-    keycloakMcpServerAudience: keycloakMcpServerAudience
-    // Azure/Entra ID OAuth Proxy authentication configuration (only when enabled)
-    entraProxyClientId: useEntraProxy ? entraProxyClientId : ''
-    entraProxyClientSecret: useEntraProxy ? entraProxyClientSecret : ''
-    entraProxyBaseUrl: useEntraProxy ? entraProxyMcpServerBaseUrl : ''
-    tenantId: useEntraProxy ? tenant().tenantId : ''
-    entraAdminGroupId: useEntraProxy ? entraAdminGroupId : ''
-    mcpAuthProvider: mcpAuthProvider
+    entraProxyClientId: entraProxyClientId
+    entraProxyClientSecret: entraProxyClientSecret
+    entraProxyBaseUrl: entraProxyMcpServerBaseUrl
+    tenantId: tenant().tenantId
+    entraAdminGroupId: entraAdminGroupId
     logfireToken: logfireToken
-  }
-}
-
-// Container app for agent
-module agent 'agent.bicep' = {
-  name: 'agent'
-  scope: resourceGroup
-  params: {
-    name: replace('${take(prefix,15)}-agent', '--', '-')
-    location: location
-    tags: tags
-    identityName: '${prefix}-id-agent'
-    containerAppsEnvironmentName: containerApps.outputs.environmentName
-    containerRegistryName: containerApps.outputs.registryName
-    openAiDeploymentName: openAiDeploymentName
-    openAiEndpoint: openAi.outputs.endpoint
-    mcpServerUrl: useKeycloak ? 'https://mcproutes.${containerApps.outputs.defaultDomain}/mcp' : '${server.outputs.uri}/mcp'
-    keycloakRealmUrl: useKeycloak ? '${keycloak.outputs.uri}/auth/realms/${keycloakRealmName}' : ''
-    exists: agentExists
-  }
-}
-
-// Keycloak authentication server (always deployed, but only used when useKeycloak is true)
-module keycloak 'keycloak.bicep' = {
-  name: 'keycloak'
-  scope: resourceGroup
-  params: {
-    name: replace('${take(prefix,19)}-kc', '--', '-')
-    location: location
-    tags: tags
-    identityName: '${prefix}-id-keycloak'
-    containerAppsEnvironmentName: containerApps.outputs.environmentName
-    containerRegistryName: containerApps.outputs.registryName
-    keycloakAdminUser: keycloakAdminUser
-    keycloakAdminPassword: useKeycloak ? keycloakAdminPassword : 'placeholder-not-used'
-    exists: keycloakExists
-  }
-}
-
-// HTTP Route configuration for rule-based routing (only when Keycloak is enabled)
-module httpRoutes 'http-routes.bicep' = if (useKeycloak) {
-  name: 'http-routes'
-  scope: resourceGroup
-  params: {
-    containerAppsEnvironmentName: containerApps.outputs.environmentName
-    mcpServerAppName: server.outputs.name
-    keycloakAppName: keycloak!.outputs.name
-  }
-}
-
-module openAiRoleUser 'core/security/role.bicep' = {
-  scope: resourceGroup
-  name: 'openai-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd' // Cognitive Services OpenAI User
-    principalType: 'User'
-  }
-}
-
-module openAiRoleServer 'core/security/role.bicep' = {
-  scope: resourceGroup
-  name: 'openai-role-server'
-  params: {
-    principalId: server.outputs.identityPrincipalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd' // Cognitive Services OpenAI User
-    principalType: 'ServicePrincipal'
-  }
-}
-
-module openAiRoleAgent 'core/security/role.bicep' = {
-  scope: resourceGroup
-  name: 'openai-role-agent'
-  params: {
-    principalId: agent.outputs.identityPrincipalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd' // Cognitive Services OpenAI User
-    principalType: 'ServicePrincipal'
   }
 }
 
@@ -902,25 +652,10 @@ output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
-output AZURE_OPENAI_CHAT_DEPLOYMENT string = openAiDeploymentName
-output AZURE_OPENAI_CHAT_MODEL string = openAiModelName
-output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
-output AZURE_OPENAI_RESOURCE string = openAi.outputs.name
-output AZURE_OPENAI_RESOURCE_LOCATION string = openAi.outputs.location
-
 output SERVICE_SERVER_IDENTITY_PRINCIPAL_ID string = server.outputs.identityPrincipalId
 output SERVICE_SERVER_NAME string = server.outputs.name
 output SERVICE_SERVER_URI string = server.outputs.uri
 output SERVICE_SERVER_IMAGE_NAME string = server.outputs.imageName
-
-output SERVICE_AGENT_IDENTITY_PRINCIPAL_ID string = agent.outputs.identityPrincipalId
-output SERVICE_AGENT_NAME string = agent.outputs.name
-output SERVICE_AGENT_URI string = agent.outputs.uri
-output SERVICE_AGENT_IMAGE_NAME string = agent.outputs.imageName
-
-output SERVICE_KEYCLOAK_NAME string = keycloak.outputs.name
-output SERVICE_KEYCLOAK_URI string = keycloak.outputs.uri
-output SERVICE_KEYCLOAK_IMAGE_NAME string = keycloak.outputs.imageName
 
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
@@ -929,33 +664,16 @@ output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 output AZURE_COSMOSDB_ACCOUNT string = cosmosDb.outputs.name
 output AZURE_COSMOSDB_ENDPOINT string = cosmosDb.outputs.endpoint
 output AZURE_COSMOSDB_DATABASE string = cosmosDbDatabaseName
-output AZURE_COSMOSDB_CONTAINER string = cosmosDbContainerName
 output AZURE_COSMOSDB_USER_CONTAINER string = cosmosDbUserContainerName
-output AZURE_COSMOSDB_OAUTH_CONTAINER string = cosmosDbOAuthContainerName
 
 // We typically do not output sensitive values, but App Insights connection strings are not considered highly sensitive
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = useAppInsights ? applicationInsights!.outputs.connectionString : ''
 
-// Entry selection for MCP server (auth-enabled when Keycloak or FastMCP auth is used)
-// Use server module's computed entry selection (checks URLs/clientId)
-output MCP_ENTRY string = server.outputs.mcpEntry
-
 // Convenience output so developer can find MCP server URL easily
-output MCP_SERVER_URL string = useKeycloak ? '${httpRoutes!.outputs.routeConfigUrl}/mcp' : '${server.outputs.uri}/mcp'
+output MCP_SERVER_URL string = '${server.outputs.uri}/mcp'
 
-// Provider-specific base URLs for MCP server (exposed for local env writing)
-output ENTRA_PROXY_MCP_SERVER_BASE_URL string = useEntraProxy ? entraProxyMcpServerBaseUrl : ''
-output KEYCLOAK_MCP_SERVER_BASE_URL string = useKeycloak ? keycloakMcpServerBaseUrl : ''
-
-// Keycloak and MCP Server routing outputs (only populated when mcpAuthProvider is keycloak)
-output KEYCLOAK_REALM_URL string = useKeycloak ? '${httpRoutes!.outputs.routeConfigUrl}/auth/realms/${keycloakRealmName}' : ''
-output KEYCLOAK_ADMIN_CONSOLE string = useKeycloak ? '${httpRoutes!.outputs.routeConfigUrl}/auth/admin/master/console' : ''
-output KEYCLOAK_DIRECT_URL string = keycloak.outputs.uri
-output KEYCLOAK_TOKEN_ISSUER string = useKeycloak ? '${keycloakMcpServerBaseUrl}/auth/realms/${keycloakRealmName}' : ''
-output KEYCLOAK_AGENT_REALM_URL string = useKeycloak ? '${keycloak!.outputs.uri}/auth/realms/${keycloakRealmName}' : ''
-
-// Auth provider for env scripts
-output MCP_AUTH_PROVIDER string = mcpAuthProvider
+// Entra proxy base URL for local env writing
+output ENTRA_PROXY_MCP_SERVER_BASE_URL string = entraProxyMcpServerBaseUrl
 
 // OpenTelemetry platform for env scripts
 output OPENTELEMETRY_PLATFORM string = openTelemetryPlatform

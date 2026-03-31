@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-: "${MCP_ENTRY:=deployed_mcp}"
+: "${MCP_ENTRY:=auth_entra_mcp}"
 APP_MODULE="${MCP_ENTRY}:app"
 
 echo "Starting uvicorn with module: ${APP_MODULE}"

@@ -26,29 +26,8 @@
       "usePrivateLogAnalytics": {
         "value": "${USE_PRIVATE_LOGANALYTICS=false}"
       },
-      "mcpAuthProvider": {
-        "value": "${MCP_AUTH_PROVIDER=none}"
-      },
       "serverExists": {
         "value": "${SERVICE_SERVER_RESOURCE_EXISTS=false}"
-      },
-      "agentExists": {
-        "value": "${SERVICE_AGENT_RESOURCE_EXISTS=false}"
-      },
-      "keycloakExists": {
-        "value": "${SERVICE_KEYCLOAK_RESOURCE_EXISTS=false}"
-      },
-      "keycloakAdminUser": {
-        "value": "${KEYCLOAK_ADMIN_USER=admin}"
-      },
-      "keycloakAdminPassword": {
-        "value": "${KEYCLOAK_ADMIN_PASSWORD}"
-      },
-      "keycloakRealmName": {
-        "value": "${KEYCLOAK_REALM_NAME=mcp}"
-      },
-      "keycloakMcpServerAudience": {
-        "value": "${KEYCLOAK_MCP_SERVER_AUDIENCE=mcp-server}"
       },
       "entraProxyClientId": {
         "value": "${ENTRA_PROXY_AZURE_CLIENT_ID}"

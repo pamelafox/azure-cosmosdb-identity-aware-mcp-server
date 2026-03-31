@@ -13,22 +13,6 @@ services:
       remoteBuild: true
       path: ./servers/Dockerfile
       context: .
-  keycloak:
-    project: .
-    language: docker
-    host: containerapp
-    docker:
-      remoteBuild: true
-      path: ./keycloak/Dockerfile
-      context: .
-  agent:
-    project: .
-    language: docker
-    host: containerapp
-    docker:
-      remoteBuild: true
-      path: ./agents/Dockerfile
-      context: .
 hooks:
   preprovision:
     windows:

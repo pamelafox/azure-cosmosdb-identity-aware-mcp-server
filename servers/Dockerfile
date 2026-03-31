@@ -37,7 +37,7 @@ ENV PATH="/code/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-ENV MCP_ENTRY=deployed_mcp
+ENV MCP_ENTRY=auth_entra_mcp
 
 # Copy and use entrypoint script for clean env expansion
 COPY --chown=app:app servers/entrypoint.sh /usr/local/bin/entrypoint.sh

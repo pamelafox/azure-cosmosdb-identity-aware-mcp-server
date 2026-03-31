@@ -44,12 +44,6 @@ async def get_existing_redirect_uris(graph_client: GraphServiceClient, object_id
 async def main():
     load_azd_env()
 
-    # Check if MCP auth provider is entra_proxy
-    MCP_AUTH_PROVIDER = os.getenv("MCP_AUTH_PROVIDER", "none")
-    if MCP_AUTH_PROVIDER != "entra_proxy":
-        print("MCP auth provider is not entra_proxy, skipping redirect URI update.")
-        return
-
     client_id = os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"]
     server_url = os.environ["ENTRA_PROXY_MCP_SERVER_BASE_URL"]
     auth_tenant = os.environ["AZURE_TENANT_ID"]

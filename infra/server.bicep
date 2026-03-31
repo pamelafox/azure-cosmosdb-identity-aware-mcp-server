@@ -7,13 +7,9 @@ param containerAppsEnvironmentName string
 param containerRegistryName string
 param serviceName string = 'server'
 param exists bool
-param openAiDeploymentName string
-param openAiEndpoint string
 param cosmosDbAccount string
 param cosmosDbDatabase string
-param cosmosDbContainer string
 param cosmosDbUserContainer string
-param cosmosDbOAuthContainer string
 param applicationInsightsConnectionString string = ''
 @allowed([
   'appinsights'
@@ -21,9 +17,6 @@ param applicationInsightsConnectionString string = ''
   'none'
 ])
 param openTelemetryPlatform string = 'appinsights'
-param keycloakRealmUrl string = ''
-param keycloakMcpServerAudience string = 'mcp-server'
-param keycloakMcpServerBaseUrl string = ''
 param entraProxyClientId string = ''
 @secure()
 param entraProxyClientSecret string = ''
@@ -32,37 +25,12 @@ param tenantId string = ''
 param entraAdminGroupId string = ''
 @secure()
 param logfireToken string = ''
-@allowed([
-  'none'
-  'keycloak'
-  'entra_proxy'
-])
-param mcpAuthProvider string = 'none'
 
 // Base environment variables
-// Select MCP entrypoint based on configured auth
-// - Keycloak → 'auth_keycloak_mcp'
-// - Entra OAuth Proxy → 'auth_entra_mcp'
-// - None → 'deployed_mcp'
-var mcpEntry = mcpAuthProvider == 'keycloak'
-  ? 'auth_keycloak_mcp'
-  : (mcpAuthProvider == 'entra_proxy' ? 'auth_entra_mcp' : 'deployed_mcp')
 var baseEnv = [
-  {
-    name: 'AZURE_OPENAI_CHAT_DEPLOYMENT'
-    value: openAiDeploymentName
-  }
-  {
-    name: 'AZURE_OPENAI_ENDPOINT'
-    value: openAiEndpoint
-  }
   {
     name: 'RUNNING_IN_PRODUCTION'
     value: 'true'
-  }
-  {
-    name: 'MCP_AUTH_PROVIDER'
-    value: mcpAuthProvider
   }
   {
     name: 'AZURE_CLIENT_ID'
@@ -77,25 +45,13 @@ var baseEnv = [
     value: cosmosDbDatabase
   }
   {
-    name: 'AZURE_COSMOSDB_CONTAINER'
-    value: cosmosDbContainer
-  }
-  {
     name: 'AZURE_COSMOSDB_USER_CONTAINER'
     value: cosmosDbUserContainer
-  }
-  {
-    name: 'AZURE_COSMOSDB_OAUTH_CONTAINER'
-    value: cosmosDbOAuthContainer
   }
   // We typically store sensitive values in secrets, but App Insights connection strings are not considered highly sensitive
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
     value: applicationInsightsConnectionString
-  }
-  {
-    name: 'MCP_ENTRY'
-    value: mcpEntry
   }
   {
     name: 'OPENTELEMETRY_PLATFORM'
@@ -108,22 +64,6 @@ var logfireEnv = !empty(logfireToken) ? [
   {
     name: 'LOGFIRE_TOKEN'
     secretRef: 'logfire-token'
-  }
-] : []
-
-// Keycloak authentication environment variables (only added when configured)
-var keycloakEnv = !empty(keycloakRealmUrl) ? [
-  {
-    name: 'KEYCLOAK_REALM_URL'
-    value: keycloakRealmUrl
-  }
-  {
-    name: 'KEYCLOAK_MCP_SERVER_AUDIENCE'
-    value: keycloakMcpServerAudience
-  }
-  {
-    name: 'KEYCLOAK_MCP_SERVER_BASE_URL'
-    value: keycloakMcpServerBaseUrl
   }
 ] : []
 
@@ -184,7 +124,7 @@ module app 'core/host/container-app-upsert.bicep' = {
     containerAppsEnvironmentName: containerAppsEnvironmentName
     containerRegistryName: containerRegistryName
     ingressEnabled: true
-    env: concat(baseEnv, keycloakEnv, entraProxyEnv, logfireEnv)
+    env: concat(baseEnv, entraProxyEnv, logfireEnv)
     secrets: concat(entraProxySecrets, logfireSecrets)
     targetPort: 8000
     probes: [
@@ -226,4 +166,3 @@ output name string = app.outputs.name
 output hostName string = app.outputs.hostName
 output uri string = app.outputs.uri
 output imageName string = app.outputs.imageName
-output mcpEntry string = mcpEntry
