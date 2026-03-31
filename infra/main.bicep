@@ -12,8 +12,6 @@ param location string
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
-param serverExists bool = false
-
 @description('OpenTelemetry platform for monitoring: appinsights, logfire, or none')
 @allowed([
   'appinsights'
@@ -25,31 +23,15 @@ param openTelemetryPlatform string = 'appinsights'
 // Derived boolean for App Insights resource creation
 var useAppInsights = openTelemetryPlatform == 'appinsights'
 
-@description('Flag to enable or disable the virtual network feature')
-param useVnet bool = false
-
-@description('Flag to enable or disable public ingress')
-param usePrivateIngress bool = false
-
-@description('Flag to restrict ACR public network access (requires VPN for local image push when true)')
-param usePrivateAcr bool = false
-
-@description('Entra ID group ID for admin access to expense statistics (only used when mcpAuthProvider is entra_proxy)')
+@description('Entra ID group ID for admin access to expense statistics')
 param entraAdminGroupId string = ''
 
-@description('Flag to restrict Log Analytics public query access for increased security')
-param usePrivateLogAnalytics bool = false
-
-@description('Azure/Entra ID app registration client ID for OAuth Proxy - required when mcpAuthProvider is entra_proxy')
-param entraProxyClientId string = ''
-
 @secure()
-@description('Azure/Entra ID app registration client secret for OAuth Proxy - required when mcpAuthProvider is entra_proxy')
-param entraProxyClientSecret string = ''
-
-@secure()
-@description('Logfire token used by the server container as a secret')
+@description('Logfire token used by the server as a secret')
 param logfireToken string = ''
+
+@description('Service Management Reference for the app registration')
+param serviceManagementReference string = ''
 
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 var tags = { 'azd-env-name': name }
@@ -83,7 +65,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = {
     ]
     networkRestrictions: {
       ipRules: []
-      publicNetworkAccess: useVnet ? 'Disabled' : 'Enabled'
+      publicNetworkAccess: 'Enabled'
       virtualNetworkRules: []
     }
     sqlDatabases: [
@@ -97,7 +79,6 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.1' = {
               '/user_id'
             ]
           }
-
         ]
       }
     ]
@@ -113,8 +94,6 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
     tags: tags
     skuName: 'PerGB2018'
     dataRetention: 30
-    publicNetworkAccessForIngestion: useVnet ? 'Disabled' : 'Enabled'
-    publicNetworkAccessForQuery: usePrivateLogAnalytics ? 'Disabled' : 'Enabled'
     useResourcePermissions: true
   }
 }
@@ -144,485 +123,76 @@ module applicationInsightsDashboard 'appinsights-dashboard.bicep' = if (useAppIn
   }
 }
 
-// https://learn.microsoft.com/en-us/azure/container-apps/firewall-integration?tabs=consumption-only
-module containerAppsNSG 'br/public:avm/res/network/network-security-group:0.5.1' = if (useVnet) {
-  name: 'containerAppsNSG'
+// App Service Plan
+module appServicePlan 'appserviceplan.bicep' = {
+  name: 'serviceplan'
   scope: resourceGroup
   params: {
-    name: '${prefix}-container-apps-nsg'
+    name: '${prefix}-serviceplan'
     location: location
     tags: tags
-    securityRules: !usePrivateIngress
-      ? [
-          {
-            name: 'AllowHttpsInbound'
-            properties: {
-              protocol: 'Tcp'
-              sourcePortRange: '*'
-              sourceAddressPrefix: 'Internet'
-              destinationPortRange: '443'
-              destinationAddressPrefix: '*'
-              access: 'Allow'
-              priority: 100
-              direction: 'Inbound'
-            }
-          }
-        ]
-      : []
-  }
-}
-
-module privateEndpointsNSG 'br/public:avm/res/network/network-security-group:0.5.1' = if (useVnet) {
-  name: 'privateEndpointsNSG'
-  scope: resourceGroup
-  params: {
-    name: '${prefix}-private-endpoints-nsg'
-    location: location
-    tags: tags
-    securityRules: [
-      {
-        name: 'AllowVnetInBound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationPortRange: '*'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 100
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'AllowAzureLoadBalancerInbound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: 'AzureLoadBalancer'
-          destinationPortRange: '*'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 110
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'DenyInternetInbound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: 'Internet'
-          destinationPortRange: '*'
-          destinationAddressPrefix: '*'
-          access: 'Deny'
-          priority: 4096
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'AllowVnetOutbound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '*'
-          destinationAddressPrefix: 'VirtualNetwork'
-          access: 'Allow'
-          priority: 100
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowAzureCloudOutbound'
-        properties: {
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '443'
-          destinationAddressPrefix: 'AzureCloud'
-          access: 'Allow'
-          priority: 110
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowDnsOutbound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '53'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 120
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'DenyInternetOutbound'
-        properties: {
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '*'
-          destinationAddressPrefix: 'Internet'
-          access: 'Deny'
-          priority: 4096
-          direction: 'Outbound'
-        }
-      }
-    ]
-  }
-}
-
-// Virtual network for all resources
-module virtualNetwork 'br/public:avm/res/network/virtual-network:0.6.1' = if (useVnet) {
-  name: 'vnet'
-  scope: resourceGroup
-  params: {
-    name: '${prefix}-vnet'
-    location: location
-    tags: tags
-    addressPrefixes: [
-      '10.0.0.0/16'
-    ]
-    subnets: [
-      {
-        name: 'container-apps-subnet'
-        addressPrefix: '10.0.0.0/21'
-        networkSecurityGroupResourceId: containerAppsNSG!.outputs.resourceId
-        delegation: 'Microsoft.App/environments'
-      }
-      {
-        name: 'private-endpoints-subnet'
-        addressPrefix: '10.0.8.0/24'
-        privateEndpointNetworkPolicies: 'Enabled'
-        privateLinkServiceNetworkPolicies: 'Enabled'
-        networkSecurityGroupResourceId: privateEndpointsNSG!.outputs.resourceId
-      }
-      {
-        name: 'GatewaySubnet' // Required name for Gateway subnet
-        addressPrefix: '10.0.255.0/27' // Using a /27 subnet size which is minimal required size for gateway subnet
-      }
-      {
-        name: 'dns-resolver-subnet' // Dedicated subnet for Azure Private DNS Resolver
-        addressPrefix: '10.0.11.0/28' // Original value kept as requested
-        delegation: 'Microsoft.Network/dnsResolvers'
-      }
-    ]
-  }
-}
-
-// Log Analytics Private DNS Zone
-module logAnalyticsPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'log-analytics-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.oms.opinsights.azure.com'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Additional Log Analytics Private DNS Zone for query endpoint
-module logAnalyticsQueryPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'log-analytics-query-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.ods.opinsights.azure.com'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Additional Log Analytics Private DNS Zone for agent service
-module logAnalyticsAgentPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'log-analytics-agent-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.agentsvc.azure-automation.net'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Azure Monitor Private DNS Zone
-module monitorPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'monitor-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.monitor.azure.com'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Storage Blob Private DNS Zone for Log Analytics solution packs
-module blobPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'blob-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.blob.${environment().suffixes.storage}'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Azure Container Registry Private DNS Zone
-module acrPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet) {
-  name: 'acr-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.azurecr.io'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Container Apps Private DNS Zone
-module containerAppsPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet) {
-  name: 'container-apps-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.${location}.azurecontainerapps.io'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// CosmosDB Private DNS Zone
-module cosmosDbPrivateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (useVnet) {
-  name: 'cosmosdb-dns-zone'
-  scope: resourceGroup
-  params: {
-    name: 'privatelink.documents.azure.com'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        registrationEnabled: false
-        virtualNetworkResourceId: virtualNetwork!.outputs.resourceId
-      }
-    ]
-  }
-}
-
-// Container Apps Environment Private Endpoint
-// https://learn.microsoft.com/azure/container-apps/how-to-use-private-endpoint
-module containerAppsEnvironmentPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (useVnet) {
-  name: 'containerAppsEnvironmentPrivateEndpointDeployment'
-  scope: resourceGroup
-  params: {
-    name: '${prefix}-containerappsenv-pe'
-    location: location
-    tags: tags
-    subnetResourceId: virtualNetwork!.outputs.subnetResourceIds[1]
-    privateDnsZoneGroup: {
-      privateDnsZoneGroupConfigs: [
-        {
-          privateDnsZoneResourceId: containerAppsPrivateDnsZone!.outputs.resourceId
-        }
-      ]
+    sku: {
+      name: 'S1'
     }
-    privateLinkServiceConnections: [
-      {
-        name: '${prefix}-container-apps-env-pe'
-        properties: {
-          groupIds: [
-            'managedEnvironments'
-          ]
-          privateLinkServiceId: containerApps.outputs.environmentId
-        }
-      }
-    ]
+    reserved: true
   }
 }
 
-// Azure Monitor Private Link Scope
-module monitorPrivateLinkScope 'br/public:avm/res/insights/private-link-scope:0.7.1' = if (useVnet && useAppInsights) {
-  name: 'monitor-private-link-scope'
-  scope: resourceGroup
-  params: {
-    name: '${prefix}-ampls'
-    location: 'global'
-    tags: tags
-    accessModeSettings: {
-      ingestionAccessMode: 'PrivateOnly'
-      queryAccessMode: usePrivateLogAnalytics ? 'PrivateOnly' : 'Open'
-    }
-    scopedResources: [
-      {
-        name: 'loganalytics-scoped-resource'
-        linkedResourceId: logAnalyticsWorkspace!.outputs.resourceId
-      }
-    ]
-    privateEndpoints: [
-      {
-        name: 'loganalytics-private-endpoint'
-        subnetResourceId: virtualNetwork!.outputs.subnetResourceIds[1]
-        privateDnsZoneGroup: {
-          privateDnsZoneGroupConfigs: [
-            {
-              privateDnsZoneResourceId: monitorPrivateDnsZone!.outputs.resourceId
-            }
-            {
-              privateDnsZoneResourceId: logAnalyticsPrivateDnsZone!.outputs.resourceId
-            }
-            {
-              privateDnsZoneResourceId: logAnalyticsQueryPrivateDnsZone!.outputs.resourceId
-            }
-            {
-              privateDnsZoneResourceId: logAnalyticsAgentPrivateDnsZone!.outputs.resourceId
-            }
-            {
-              privateDnsZoneResourceId: blobPrivateDnsZone!.outputs.resourceId
-            }
-          ]
-        }
-      }
-    ]
-  }
+// App settings shared between initial deployment and auth update
+var serverAppSettings = {
+  RUNNING_IN_PRODUCTION: 'true'
+  AZURE_COSMOSDB_ACCOUNT: cosmosDb.outputs.name
+  AZURE_COSMOSDB_DATABASE: cosmosDbDatabaseName
+  AZURE_COSMOSDB_USER_CONTAINER: cosmosDbUserContainerName
+  APPLICATIONINSIGHTS_CONNECTION_STRING: useAppInsights ? applicationInsights!.outputs.connectionString : ''
+  OPENTELEMETRY_PLATFORM: openTelemetryPlatform
+  ENTRA_ADMIN_GROUP_ID: entraAdminGroupId
+  LOGFIRE_TOKEN: logfireToken
+  SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+  ENABLE_ORYX_BUILD: 'true'
 }
 
-// Container apps host (including container registry)
-module containerApps 'core/host/container-apps.bicep' = {
-  name: 'container-apps'
+// App Service for MCP server
+module web 'appservice.bicep' = {
+  name: 'web'
   scope: resourceGroup
   params: {
-    name: 'app'
+    name: replace('${take(prefix, 19)}-server', '--', '-')
     location: location
     tags: tags
-    containerAppsEnvironmentName: '${prefix}-containerapps-env'
-    containerRegistryName: '${take(replace(prefix, '-', ''), 42)}registry'
-    logAnalyticsWorkspaceName: useAppInsights ? logAnalyticsWorkspace!.outputs.name : ''
-    // Reference the virtual network only if useVnet is true
-    subnetResourceId: useVnet ? virtualNetwork!.outputs.subnetResourceIds[0] : ''
-    vnetName: useVnet ? virtualNetwork!.outputs.name : ''
-    subnetName: useVnet ? virtualNetwork!.outputs.subnetNames[0] : ''
-    usePrivateIngress: usePrivateIngress
-    usePrivateAcr: usePrivateAcr
+    appServicePlanId: appServicePlan.outputs.id
+    appCommandLine: 'uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000'
+    appSettings: serverAppSettings
   }
 }
 
-// Container Registry Private Endpoint
-module acrPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (useVnet) {
-  name: 'acrPrivateEndpointDeployment'
+// Entra app registration
+var issuer = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
+module registration 'appregistration.bicep' = {
+  name: 'reg'
   scope: resourceGroup
   params: {
-    name: '${prefix}-acr-pe'
-    location: location
-    tags: tags
-    subnetResourceId: virtualNetwork!.outputs.subnetResourceIds[1]
-    privateDnsZoneGroup: {
-      privateDnsZoneGroupConfigs: [
-        {
-          privateDnsZoneResourceId: acrPrivateDnsZone!.outputs.resourceId
-        }
-      ]
-    }
-    privateLinkServiceConnections: [
-      {
-        name: '${prefix}-acr-pe'
-        properties: {
-          groupIds: [
-            'registry'
-          ]
-          privateLinkServiceId: containerApps.outputs.registryId
-        }
-      }
-    ]
+    clientAppName: '${prefix}-entra-mcp-app'
+    clientAppDisplayName: 'MCP Expense Server App'
+    webAppEndpoint: web.outputs.uri
+    webAppIdentityId: web.outputs.identityPrincipalId
+    issuer: issuer
+    serviceManagementReference: serviceManagementReference
   }
 }
 
-// CosmosDB Private Endpoint
-module cosmosDbPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (useVnet) {
-  name: 'cosmosDbPrivateEndpointDeployment'
+// Configure Easy Auth on App Service (passes all app settings to avoid list() circular dependency)
+module appupdate 'appupdate.bicep' = {
+  name: 'appupdate'
   scope: resourceGroup
   params: {
-    name: '${prefix}-cosmosdb-pe'
-    location: location
-    tags: tags
-    subnetResourceId: virtualNetwork!.outputs.subnetResourceIds[1]
-    privateDnsZoneGroup: {
-      privateDnsZoneGroupConfigs: [
-        {
-          privateDnsZoneResourceId: cosmosDbPrivateDnsZone!.outputs.resourceId
-        }
-      ]
-    }
-    privateLinkServiceConnections: [
-      {
-        name: '${prefix}-cosmosdb-pe'
-        properties: {
-          groupIds: [
-            'Sql'
-          ]
-          privateLinkServiceId: cosmosDb.outputs.resourceId
-        }
-      }
-    ]
-  }
-}
-
-// Container app for MCP server
-var containerAppDomain = replace('${take(prefix,15)}-server', '--', '-')
-var entraProxyMcpServerBaseUrl = 'https://${containerAppDomain}.${containerApps.outputs.defaultDomain}'
-module server 'server.bicep' = {
-  name: 'server'
-  scope: resourceGroup
-  params: {
-    name: containerAppDomain
-    location: location
-    tags: tags
-    identityName: '${prefix}-id-server'
-    containerAppsEnvironmentName: containerApps.outputs.environmentName
-    containerRegistryName: containerApps.outputs.registryName
-    cosmosDbAccount: cosmosDb.outputs.name
-    cosmosDbDatabase: cosmosDbDatabaseName
-    cosmosDbUserContainer: cosmosDbUserContainerName
-    applicationInsightsConnectionString: useAppInsights ? applicationInsights!.outputs.connectionString : ''
-    openTelemetryPlatform: openTelemetryPlatform
-    exists: serverExists
-    entraProxyClientId: entraProxyClientId
-    entraProxyClientSecret: entraProxyClientSecret
-    entraProxyBaseUrl: entraProxyMcpServerBaseUrl
-    tenantId: tenant().tenantId
-    entraAdminGroupId: entraAdminGroupId
-    logfireToken: logfireToken
+    appServiceName: web.outputs.name
+    clientId: registration.outputs.clientAppId
+    openIdIssuer: issuer
+    prmScope: registration.outputs.userImpersonationScope
+    appSettings: union(serverAppSettings, {
+      OVERRIDE_USE_MI_FIC_ASSERTION_CLIENTID: web.outputs.identityClientId
+    })
   }
 }
 
@@ -643,7 +213,7 @@ module cosmosDbRoleServer 'core/security/documentdb-sql-role.bicep' = {
   name: 'cosmosdb-role-server'
   params: {
     databaseAccountName: cosmosDb.outputs.name
-    principalId: server.outputs.identityPrincipalId
+    principalId: web.outputs.identityPrincipalId
     roleDefinitionId: '/${subscription().id}/resourceGroups/${resourceGroup.name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDb.outputs.name}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
   }
 }
@@ -652,28 +222,16 @@ output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
-output SERVICE_SERVER_IDENTITY_PRINCIPAL_ID string = server.outputs.identityPrincipalId
-output SERVICE_SERVER_NAME string = server.outputs.name
-output SERVICE_SERVER_URI string = server.outputs.uri
-output SERVICE_SERVER_IMAGE_NAME string = server.outputs.imageName
-
-output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
-output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
+output SERVICE_SERVER_NAME string = web.outputs.name
+output SERVICE_SERVER_URI string = web.outputs.uri
 
 output AZURE_COSMOSDB_ACCOUNT string = cosmosDb.outputs.name
 output AZURE_COSMOSDB_ENDPOINT string = cosmosDb.outputs.endpoint
 output AZURE_COSMOSDB_DATABASE string = cosmosDbDatabaseName
 output AZURE_COSMOSDB_USER_CONTAINER string = cosmosDbUserContainerName
 
-// We typically do not output sensitive values, but App Insights connection strings are not considered highly sensitive
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = useAppInsights ? applicationInsights!.outputs.connectionString : ''
 
-// Convenience output so developer can find MCP server URL easily
-output MCP_SERVER_URL string = '${server.outputs.uri}/mcp'
+output MCP_SERVER_URL string = '${web.outputs.uri}/mcp'
 
-// Entra proxy base URL for local env writing
-output ENTRA_PROXY_MCP_SERVER_BASE_URL string = entraProxyMcpServerBaseUrl
-
-// OpenTelemetry platform for env scripts
 output OPENTELEMETRY_PLATFORM string = openTelemetryPlatform

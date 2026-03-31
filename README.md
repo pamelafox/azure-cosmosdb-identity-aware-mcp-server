@@ -116,8 +116,7 @@ Pricing varies per region and usage, so it isn't possible to predict exact costs
 
 You can try the [Azure pricing calculator](https://azure.com/e/3987c81282c84410b491d28094030c9a) for the resources:
 
-- **Azure Container Apps**: Consumption tier. [Pricing](https://azure.microsoft.com/pricing/details/container-apps/)
-- **Azure Container Registry**: Standard tier. [Pricing](https://azure.microsoft.com/pricing/details/container-registry/)
+- **Azure App Service**: Basic (B1) tier. [Pricing](https://azure.microsoft.com/pricing/details/app-service/linux/)
 - **Azure Cosmos DB**: Serverless tier. [Pricing](https://azure.microsoft.com/pricing/details/cosmos-db/)
 - **Log Analytics** (Optional): Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
 
@@ -205,36 +204,7 @@ You can also view OpenTelemetry traces in [Logfire](https://logfire.io/) by conf
 
 ---
 
-## Deploy to Azure with private networking
-
-To demonstrate enhanced security for production deployments, this project supports deploying with a virtual network (VNet) configuration that restricts public access to Azure resources.
-
-1. Set these azd environment variables to set up a virtual network and private endpoints for the Container App and Cosmos DB:
-
-   ```bash
-   azd env set USE_VNET true
-   azd env set USE_PRIVATE_INGRESS true
-   ```
-
-   The Log Analytics and ACR resources will still have public access enabled, so that you can deploy and monitor the app without needing a VPN. In production, you would typically restrict these as well.
-
-2. Provision and deploy:
-
-   ```bash
-   azd up
-   ```
-
-### Additional costs for private networking
-
-When using VNet configuration, additional Azure resources are provisioned:
-
-- **Virtual Network**: Pay-as-you-go tier. Costs based on data processed. [Pricing](https://azure.microsoft.com/pricing/details/virtual-network/)
-- **Azure Private DNS Resolver**: Pricing per month, endpoints, and zones. [Pricing](https://azure.microsoft.com/pricing/details/dns/)
-- **Azure Private Endpoints**: Pricing per hour per endpoint. [Pricing](https://azure.microsoft.com/pricing/details/private-link/)
-
----
-
-## Deploy to Azure with private networking
+## Resources
 
 * [Video series: Python + MCP (December 2025)](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402)
 * [MCP for beginners: Online tutorial](https://github.com/microsoft/mcp-for-beginners)

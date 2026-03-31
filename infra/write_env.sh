@@ -43,13 +43,10 @@ echo "AZURE_COSMOSDB_USER_CONTAINER=$(azd env get-value AZURE_COSMOSDB_USER_CONT
 echo "APPLICATIONINSIGHTS_CONNECTION_STRING=$(azd env get-value APPLICATIONINSIGHTS_CONNECTION_STRING)" >> "$ENV_FILE_PATH"
 write_env_if_set LOGFIRE_TOKEN
 write_env OPENTELEMETRY_PLATFORM
+write_env_if_set ENTRA_ADMIN_GROUP_ID
 
-# Entra proxy env vars (only if ENTRA_PROXY_AZURE_CLIENT_ID is set)
-ENTRA_PROXY_AZURE_CLIENT_ID=$(get_azd_value ENTRA_PROXY_AZURE_CLIENT_ID)
-if [ -n "$ENTRA_PROXY_AZURE_CLIENT_ID" ]; then
-  echo "ENTRA_PROXY_AZURE_CLIENT_ID=${ENTRA_PROXY_AZURE_CLIENT_ID}" >> "$ENV_FILE_PATH"
-  write_env ENTRA_PROXY_AZURE_CLIENT_SECRET
-  write_env ENTRA_PROXY_MCP_SERVER_BASE_URL
-  write_env_if_set ENTRA_ADMIN_GROUP_ID
-fi
+# Entra proxy env vars for local development (re-use the app registration created by Bicep)
+write_env_if_set ENTRA_PROXY_AZURE_CLIENT_ID
+write_env_if_set ENTRA_PROXY_AZURE_CLIENT_SECRET
+
 echo "MCP_SERVER_URL=$(azd env get-value MCP_SERVER_URL)" >> "$ENV_FILE_PATH"

@@ -14,27 +14,6 @@
       "openTelemetryPlatform": {
         "value": "${OPENTELEMETRY_PLATFORM=appinsights}"
       },
-      "useVnet": {
-        "value": "${USE_VNET=false}"
-      },
-      "usePrivateIngress": {
-        "value": "${USE_PRIVATE_INGRESS=false}"
-      },
-      "usePrivateAcr": {
-        "value": "${USE_PRIVATE_ACR=false}"
-      },
-      "usePrivateLogAnalytics": {
-        "value": "${USE_PRIVATE_LOGANALYTICS=false}"
-      },
-      "serverExists": {
-        "value": "${SERVICE_SERVER_RESOURCE_EXISTS=false}"
-      },
-      "entraProxyClientId": {
-        "value": "${ENTRA_PROXY_AZURE_CLIENT_ID}"
-      },
-      "entraProxyClientSecret": {
-        "value": "${ENTRA_PROXY_AZURE_CLIENT_SECRET}"
-      },
       "entraAdminGroupId": {
         "value": "${ENTRA_ADMIN_GROUP_ID}"
       },

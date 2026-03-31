@@ -1,9 +1,17 @@
 """
 Expense tracking MCP server with Entra authentication and Cosmos DB storage.
 
-Run with: cd servers && uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000
+In production (App Service with Easy Auth): Authentication is handled by Easy Auth.
+User identity comes from X-MS-CLIENT-PRINCIPAL-ID header.
+
+Locally: Uses FastMCP AzureProvider OAuth proxy for authentication.
+User identity comes from the proxied Entra token's 'oid' claim.
+
+Run locally with: cd servers && uv run uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000
 """
 
+import base64
+import json
 import logging
 import os
 import uuid
@@ -20,13 +28,15 @@ from azure.identity.aio import DefaultAzureCredential, ManagedIdentityCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
-from fastmcp.server.auth.providers.azure import AzureProvider
-from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.auth import RemoteAuthProvider
+from fastmcp.server.auth.providers.azure import AzureJWTVerifier, AzureProvider
+from fastmcp.server.dependencies import get_access_token, get_http_request
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from msal import ConfidentialClientApplication, TokenCache
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
 from rich.console import Console
 from rich.logging import RichHandler
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from opentelemetry_middleware import OpenTelemetryMiddleware
@@ -81,32 +91,61 @@ cosmos_db = cosmos_client.get_database_client(os.environ["AZURE_COSMOSDB_DATABAS
 cosmos_container = cosmos_db.get_container_client(os.environ["AZURE_COSMOSDB_USER_CONTAINER"])
 
 # Configure authentication provider
-# Azure/Entra ID authentication using AzureProvider with CIMD (static client registration)
-# When running locally, always use localhost for base URL (OAuth redirects need to match)
-if RUNNING_IN_PRODUCTION:
-    entra_base_url = os.environ["ENTRA_PROXY_MCP_SERVER_BASE_URL"]
-else:
-    entra_base_url = "http://localhost:8000"
-auth = AzureProvider(
-    client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
-    client_secret=os.environ["ENTRA_PROXY_AZURE_CLIENT_SECRET"],
-    tenant_id=os.environ["AZURE_TENANT_ID"],
-    base_url=entra_base_url,
-    required_scopes=["mcp-access"],
-    require_authorization_consent="external",
-)
-logger.info("Using Entra OAuth Proxy for server %s", entra_base_url)
+# Production: Easy Auth handles authentication at the infrastructure level (no FastMCP auth needed)
+# Local: Uses FastMCP AzureProvider OAuth proxy, or RemoteAuthProvider for direct Entra auth
+USE_REMOTE_AUTH = os.getenv("USE_REMOTE_AUTH", "false").lower() == "true"
 
-confidential_client = ConfidentialClientApplication(
-    client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
-    client_credential=os.environ["ENTRA_PROXY_AZURE_CLIENT_SECRET"],
-    authority=f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}",
-    token_cache=TokenCache(),
-)
+if RUNNING_IN_PRODUCTION:
+    auth = None
+    logger.info("Using Easy Auth for production authentication")
+elif USE_REMOTE_AUTH:
+    # Direct Entra auth — VS Code talks to Entra directly (no proxy).
+    # Requires VS Code to send a GUID client_id that Entra recognizes.
+    # Test this to see if VS Code has special Entra handling.
+    verifier = AzureJWTVerifier(
+        client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        tenant_id=os.environ["AZURE_TENANT_ID"],
+        required_scopes=["user_impersonation"],
+    )
+    auth = RemoteAuthProvider(
+        token_verifier=verifier,
+        authorization_servers=[f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}/v2.0"],
+        base_url="http://localhost:8000",
+    )
+    logger.info(
+        "Using RemoteAuthProvider for direct Entra auth (client_id=%s, tenant=%s)",
+        os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        os.environ["AZURE_TENANT_ID"],
+    )
+    # Enable debug logging for JWT verification
+    logging.getLogger("fastmcp.server.auth").setLevel(logging.DEBUG)
+else:
+    auth = AzureProvider(
+        client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        client_secret=os.environ["ENTRA_PROXY_AZURE_CLIENT_SECRET"],
+        tenant_id=os.environ["AZURE_TENANT_ID"],
+        base_url="http://localhost:8000",
+        required_scopes=["mcp-access"],
+        require_authorization_consent="external",
+    )
+    logger.info("Using Entra OAuth Proxy for local authentication")
+
+# MSAL confidential client for OBO flow (used by get_expense_stats for Graph API calls)
+# Only needed locally where we have the client secret; in production, Easy Auth provides Graph tokens
+if not RUNNING_IN_PRODUCTION:
+    confidential_client = ConfidentialClientApplication(
+        client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        client_credential=os.environ["ENTRA_PROXY_AZURE_CLIENT_SECRET"],
+        authority=f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}",
+        token_cache=TokenCache(),
+    )
+else:
+    confidential_client = None
 
 
 async def check_user_in_group(graph_token: str, group_id: str) -> bool:
-    """Check if the authenticated user is a member of the specified group (including transitive membership)."""
+    """Check if the authenticated user is a member of the specified group (including transitive membership).
+    Used locally where we have a Graph token via OBO flow."""
     async with httpx.AsyncClient() as client:
         url = (
             "https://graph.microsoft.com/v1.0/me/transitiveMemberOf/microsoft.graph.group"
@@ -127,13 +166,42 @@ async def check_user_in_group(graph_token: str, group_id: str) -> bool:
         return membership_count > 0
 
 
+def check_user_in_group_via_easy_auth(group_id: str) -> bool:
+    """Check if the authenticated user is in a group using Easy Auth's X-MS-CLIENT-PRINCIPAL header.
+    The app registration is configured with groupMembershipClaims: SecurityGroup,
+    so the token (and thus the principal) includes group IDs."""
+    request = get_http_request()
+    principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    if not principal_header:
+        logger.warning("X-MS-CLIENT-PRINCIPAL header not found")
+        return False
+
+    try:
+        principal = json.loads(base64.b64decode(principal_header))
+        claims = principal.get("claims", [])
+        # Claims is a list of {"typ": "...", "val": "..."} dicts
+        user_groups = [c["val"] for c in claims if c.get("typ") == "groups"]
+        is_member = group_id in user_groups
+        logger.info(f"Easy Auth group check for {group_id}: {is_member} (user has {len(user_groups)} groups)")
+        return is_member
+    except Exception:
+        logger.error("Failed to decode X-MS-CLIENT-PRINCIPAL", exc_info=True)
+        return False
+
+
 # Middleware to populate user_id in per-request context state
 class UserAuthMiddleware(Middleware):
     def _get_user_id(self):
-        token = get_access_token()
-        if not (token and hasattr(token, "claims")):
-            return None
-        return token.claims.get("oid")
+        if RUNNING_IN_PRODUCTION:
+            # In production, Easy Auth sets X-MS-CLIENT-PRINCIPAL-ID header
+            request: Request = get_http_request()
+            return request.headers.get("X-MS-CLIENT-PRINCIPAL-ID")
+        else:
+            # Locally, user identity comes from the proxied Entra token
+            token = get_access_token()
+            if not (token and hasattr(token, "claims")):
+                return None
+            return token.claims.get("oid")
 
     async def on_call_tool(self, context: MiddlewareContext, call_next):
         user_id = self._get_user_id()
@@ -246,29 +314,29 @@ async def get_expense_stats(ctx: Context):
     """Get a statistical summary of expenses (count per category) for all users.
     Only accessible to users in the authorized admin group.
     """
-    access_token = get_access_token()
-    if not access_token:
-        return "Error: Authentication required"
+    admin_group_id = os.environ.get("ENTRA_ADMIN_GROUP_ID", "")
+    if not admin_group_id:
+        return "Error: Admin group ID not configured. Set ENTRA_ADMIN_GROUP_ID environment variable."
 
-    auth_token = access_token.token
     try:
-        graph_resource_access_token = confidential_client.acquire_token_on_behalf_of(
-            user_assertion=auth_token, scopes=["https://graph.microsoft.com/.default"]
-        )
-        if "error" in graph_resource_access_token:
-            logger.error(
-                "OBO token acquisition failed: %s",
-                graph_resource_access_token.get("error_description", "Unknown error"),
+        if RUNNING_IN_PRODUCTION:
+            # In production, Easy Auth provides group claims via X-MS-CLIENT-PRINCIPAL
+            is_admin = check_user_in_group_via_easy_auth(admin_group_id)
+        else:
+            # Locally, use OBO flow to get a Graph token and check membership
+            access_token = get_access_token()
+            if not access_token:
+                return "Error: Authentication required"
+            graph_resource_access_token = confidential_client.acquire_token_on_behalf_of(
+                user_assertion=access_token.token, scopes=["https://graph.microsoft.com/.default"]
             )
-            return "Error: Unable to verify permissions. Please try again later."
-
-        graph_auth_token = graph_resource_access_token["access_token"]
-
-        # Check for the specific admin group ID using transitive membership
-        admin_group_id = os.environ.get("ENTRA_ADMIN_GROUP_ID", "")
-        if not admin_group_id:
-            return "Error: Admin group ID not configured. Set ENTRA_ADMIN_GROUP_ID environment variable."
-        is_admin = await check_user_in_group(graph_auth_token, admin_group_id)
+            if "error" in graph_resource_access_token:
+                logger.error(
+                    "OBO token acquisition failed: %s",
+                    graph_resource_access_token.get("error_description", "Unknown error"),
+                )
+                return "Error: Unable to verify permissions. Please try again later."
+            is_admin = await check_user_in_group(graph_resource_access_token["access_token"], admin_group_id)
 
         if not is_admin:
             return "Error: Unauthorized. You do not have permission to access expense statistics."
