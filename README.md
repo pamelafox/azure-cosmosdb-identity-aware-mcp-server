@@ -131,7 +131,7 @@ See [Use with GitHub Copilot](#use-with-github-copilot) below.
 After deployment sets up the required Azure resources (Cosmos DB, Application Insights) and Entra App Registration, you can run the MCP server locally against those resources:
 
 ```bash
-cd servers && uv run uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000
+cd servers && uv run uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## Use with GitHub Copilot

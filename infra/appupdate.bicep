@@ -23,7 +23,7 @@ param env array
 @description('The secrets array from main.bicep')
 param secrets array = []
 
-// Patch the container app to add the production ENTRA_APP_CLIENT_ID env var.
+// Patch the container app to add the production ENTRA_PROD_CLIENT_ID env var.
 // This runs after appregistration.bicep creates the app registration,
 // breaking the circular dependency (server needs client ID, registration needs server URI).
 module patchEnv 'core/host/container-app-upsert.bicep' = {
@@ -41,7 +41,7 @@ module patchEnv 'core/host/container-app-upsert.bicep' = {
     targetPort: 8000
     env: union(env, [
       {
-        name: 'ENTRA_APP_CLIENT_ID'
+        name: 'ENTRA_PROD_CLIENT_ID'
         value: entraAppClientId
       }
     ])

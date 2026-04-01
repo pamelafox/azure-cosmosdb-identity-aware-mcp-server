@@ -14,17 +14,17 @@
       "serverExists": {
         "value": "${SERVICE_SERVER_RESOURCE_EXISTS=false}"
       },
-      "openTelemetryPlatform": {
-        "value": "${OPENTELEMETRY_PLATFORM=appinsights}"
-      },
       "entraAdminGroupId": {
         "value": "${ENTRA_ADMIN_GROUP_ID}"
       },
-      "entraProxyClientId": {
-        "value": "${ENTRA_PROXY_AZURE_CLIENT_ID}"
+      "entraDevClientId": {
+        "value": "${ENTRA_DEV_CLIENT_ID}"
       },
-      "entraProxyClientSecret": {
-        "value": "${ENTRA_PROXY_AZURE_CLIENT_SECRET}"
+      "entraDevClientSecret": {
+        "value": "${ENTRA_DEV_CLIENT_SECRET}"
+      },
+      "entraProdClientId": {
+        "value": "${ENTRA_PROD_CLIENT_ID}"
       }
     }
   }

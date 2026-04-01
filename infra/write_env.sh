@@ -41,11 +41,10 @@ echo "AZURE_COSMOSDB_ACCOUNT=$(azd env get-value AZURE_COSMOSDB_ACCOUNT)" >> "$E
 echo "AZURE_COSMOSDB_DATABASE=$(azd env get-value AZURE_COSMOSDB_DATABASE)" >> "$ENV_FILE_PATH"
 echo "AZURE_COSMOSDB_USER_CONTAINER=$(azd env get-value AZURE_COSMOSDB_USER_CONTAINER)" >> "$ENV_FILE_PATH"
 echo "APPLICATIONINSIGHTS_CONNECTION_STRING=$(azd env get-value APPLICATIONINSIGHTS_CONNECTION_STRING)" >> "$ENV_FILE_PATH"
-write_env OPENTELEMETRY_PLATFORM
 write_env_if_set ENTRA_ADMIN_GROUP_ID
 
-# Entra proxy env vars for local development (re-use the app registration created by Bicep)
-write_env_if_set ENTRA_PROXY_AZURE_CLIENT_ID
-write_env_if_set ENTRA_PROXY_AZURE_CLIENT_SECRET
+# Entra dev app env vars for local development
+write_env_if_set ENTRA_DEV_CLIENT_ID
+write_env_if_set ENTRA_DEV_CLIENT_SECRET
 
 echo "MCP_SERVER_URL=$(azd env get-value MCP_SERVER_URL)" >> "$ENV_FILE_PATH"

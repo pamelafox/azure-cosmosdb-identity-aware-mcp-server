@@ -5,7 +5,7 @@ Uses RemoteAuthProvider with AzureJWTVerifier for direct Entra authentication.
 VS Code authenticates directly with Entra (pre-registered as authorized client),
 and the server validates the token using Entra's public signing keys.
 
-Run locally with: cd servers && uv run uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000
+Run locally with: cd servers && uv run uvicorn main:app --host 0.0.0.0 --port 8000
 """
 
 import json
@@ -37,8 +37,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 from starlette.responses import JSONResponse
 
-from opentelemetry_middleware import OpenTelemetryMiddleware
-
 RUNNING_IN_PRODUCTION = os.getenv("RUNNING_IN_PRODUCTION", "false").lower() == "true"
 
 if not RUNNING_IN_PRODUCTION:
@@ -65,9 +63,8 @@ logger.setLevel(logging.INFO)
 # Configure Azure SDK OpenTelemetry to use OTEL
 settings.tracing_implementation = "opentelemetry"
 
-# Configure OpenTelemetry exporters based on OPENTELEMETRY_PLATFORM env var
-opentelemetry_platform = os.getenv("OPENTELEMETRY_PLATFORM", "none").lower()
-if opentelemetry_platform == "appinsights" and os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+# Configure Azure Monitor for App Insights telemetry
+if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     logger.info("Setting up Azure Monitor instrumentation")
     configure_azure_monitor()
 
@@ -88,12 +85,12 @@ cosmos_container = cosmos_db.get_container_client(os.environ["AZURE_COSMOSDB_USE
 # Configure authentication: RemoteAuthProvider with AzureJWTVerifier
 # VS Code authenticates directly with Entra (pre-registered as authorized client).
 # The server validates tokens using Entra's public signing keys — no client secret needed.
-# In production, use the production app registration (ENTRA_APP_CLIENT_ID from appregistration.bicep).
-# Locally, use the dev app registration (ENTRA_PROXY_AZURE_CLIENT_ID).
-entra_client_id = os.environ.get("ENTRA_APP_CLIENT_ID") or os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"]
+# In production, use the production app registration (ENTRA_PROD_CLIENT_ID from auth_init.py).
+# Locally, use the dev app registration (ENTRA_DEV_CLIENT_ID).
+entra_client_id = os.environ.get("ENTRA_PROD_CLIENT_ID") or os.environ["ENTRA_DEV_CLIENT_ID"]
 base_url = os.environ.get("MCP_SERVER_BASE_URL", "http://localhost:8000")
-# The production app's identifierUris is corrected to api://<appId> by auth_postprovision.py
-# after Bicep provision, so AzureJWTVerifier's default identifier_uri of api://<client_id> matches.
+# The production app's identifierUris is set to api://<appId> by auth_init.py,
+# so AzureJWTVerifier's default identifier_uri of api://<client_id> matches.
 verifier = AzureJWTVerifier(
     client_id=entra_client_id,
     tenant_id=os.environ["AZURE_TENANT_ID"],
@@ -113,7 +110,7 @@ logger.info(
 # MSAL confidential client for OBO flow (used by get_expense_stats for Graph API calls)
 # In production: uses managed identity as a federated credential (no secret needed)
 # Locally: uses a client secret from the local dev app registration
-client_secret = os.environ.get("ENTRA_PROXY_AZURE_CLIENT_SECRET")
+client_secret = os.environ.get("ENTRA_DEV_CLIENT_SECRET")
 if RUNNING_IN_PRODUCTION:
     mi_client = ManagedIdentityClient(
         UserAssignedManagedIdentity(client_id=os.environ["AZURE_CLIENT_ID"]),
@@ -215,7 +212,7 @@ class UserAuthMiddleware(Middleware):
 
 
 # Create the MCP server
-mcp = FastMCP("Expenses Tracker", auth=auth, middleware=[OpenTelemetryMiddleware("ExpensesMCP"), UserAuthMiddleware()])
+mcp = FastMCP("Expenses Tracker", auth=auth, middleware=[UserAuthMiddleware()])
 
 
 class PaymentMethod(Enum):

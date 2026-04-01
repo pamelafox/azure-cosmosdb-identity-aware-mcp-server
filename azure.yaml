@@ -14,12 +14,25 @@ services:
       path: ./servers/Dockerfile
       context: .
 hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: uv run python ./infra/auth_init.py
+      continueOnError: true
+      interactive: true
+    windows:
+      shell: pwsh
+      run: uv run python ./infra/auth_init.py
+      continueOnError: true
+      interactive: true
   postprovision:
     posix:
       shell: sh
       run: ./infra/write_env.sh && uv run python ./infra/auth_postprovision.py
       continueOnError: true
+      interactive: true
     windows:
       shell: pwsh
       run: ./infra/write_env.ps1; uv run python ./infra/auth_postprovision.py
       continueOnError: true
+      interactive: true

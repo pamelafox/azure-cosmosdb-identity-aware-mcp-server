@@ -15,7 +15,6 @@ dependencies = [
     "azure-cosmos>=4.9.0",
     "azure-monitor-opentelemetry>=1.8.3",
     "opentelemetry-instrumentation-starlette>=0.60b0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.39.0",
     "azure-core-tracing-opentelemetry>=1.0.0b12"
 ]
 
@@ -30,4 +29,4 @@ line-length = 120
 target-version = "py310"
 lint.select = ["E", "F", "I", "UP"]
 lint.ignore = ["D203"]
-lint.isort.known-first-party = ["opentelemetry_middleware"]
+

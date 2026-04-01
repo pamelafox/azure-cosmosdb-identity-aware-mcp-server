@@ -14,28 +14,21 @@ param principalId string = ''
 
 param serverExists bool = false
 
-@description('OpenTelemetry platform for monitoring: appinsights or none')
-@allowed([
-  'appinsights'
-  'none'
-])
-param openTelemetryPlatform string = 'appinsights'
-
-// Derived boolean for App Insights resource creation
-var useAppInsights = openTelemetryPlatform == 'appinsights'
+// App Insights is always enabled
+var useAppInsights = true
 
 @description('Entra ID group ID for admin access to expense statistics')
 param entraAdminGroupId string = ''
 
-@description('Azure/Entra ID app registration client ID for OAuth Proxy')
-param entraProxyClientId string = ''
+@description('Entra ID app registration client ID for local dev OAuth')
+param entraDevClientId string = ''
 
 @secure()
-@description('Azure/Entra ID app registration client secret for OAuth Proxy')
-param entraProxyClientSecret string = ''
+@description('Entra ID app registration client secret for local dev OAuth')
+param entraDevClientSecret string = ''
 
-@description('Service Management Reference for the app registration')
-param serviceManagementReference string = ''
+@description('Entra ID production app registration client ID (created by auth_init.py)')
+param entraProdClientId string = ''
 
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 var tags = { 'azd-env-name': name }
@@ -158,7 +151,7 @@ module serverIdentity 'br/public:avm/res/managed-identity/user-assigned-identity
   }
 }
 
-// Shared environment variables used by both server.bicep and appupdate.bicep
+// Shared environment variables for the server container app
 var serverEnv = [
   { name: 'RUNNING_IN_PRODUCTION', value: 'true' }
   { name: 'AZURE_CLIENT_ID', value: serverIdentity.outputs.clientId }
@@ -166,20 +159,19 @@ var serverEnv = [
   { name: 'AZURE_COSMOSDB_DATABASE', value: cosmosDbDatabaseName }
   { name: 'AZURE_COSMOSDB_USER_CONTAINER', value: cosmosDbUserContainerName }
   { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: useAppInsights ? applicationInsights!.outputs.connectionString : '' }
-  { name: 'MCP_ENTRY', value: 'auth_entra_mcp' }
-  { name: 'OPENTELEMETRY_PLATFORM', value: openTelemetryPlatform }
   { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
   { name: 'MCP_SERVER_BASE_URL', value: mcpServerBaseUrl }
   { name: 'ENTRA_ADMIN_GROUP_ID', value: entraAdminGroupId }
+  { name: 'ENTRA_PROD_CLIENT_ID', value: entraProdClientId }
 ]
 
-var entraProxyEnv = !empty(entraProxyClientId) ? [
-  { name: 'ENTRA_PROXY_AZURE_CLIENT_ID', value: entraProxyClientId }
-  { name: 'ENTRA_PROXY_AZURE_CLIENT_SECRET', secretRef: 'entra-proxy-client-secret' }
+var entraDevEnv = !empty(entraDevClientId) ? [
+  { name: 'ENTRA_DEV_CLIENT_ID', value: entraDevClientId }
+  { name: 'ENTRA_DEV_CLIENT_SECRET', secretRef: 'entra-dev-client-secret' }
 ] : []
 
-var entraProxySecrets = !empty(entraProxyClientSecret) ? [
-  { name: 'entra-proxy-client-secret', value: entraProxyClientSecret }
+var entraDevSecrets = !empty(entraDevClientSecret) ? [
+  { name: 'entra-dev-client-secret', value: entraDevClientSecret }
 ] : []
 
 module server 'server.bicep' = {
@@ -193,41 +185,8 @@ module server 'server.bicep' = {
     containerAppsEnvironmentName: containerApps.outputs.environmentName
     containerRegistryName: containerApps.outputs.registryName
     exists: serverExists
-    env: concat(serverEnv, entraProxyEnv)
-    secrets: entraProxySecrets
-  }
-}
-
-// Entra app registration with managed identity federated credential
-var issuer = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
-var clientAppName = '${prefix}-entra-mcp-app'
-module registration 'appregistration.bicep' = {
-  name: 'reg'
-  scope: resourceGroup
-  params: {
-    clientAppName: clientAppName
-    clientAppDisplayName: 'MCP Expense Server App'
-    webAppIdentityId: server.outputs.identityPrincipalId
-    issuer: issuer
-    serviceManagementReference: serviceManagementReference
-  }
-}
-
-// Patch the container app with the production app registration client ID
-// (breaks circular dependency: server needs client ID, registration needs server URI)
-module serverUpdate 'appupdate.bicep' = {
-  name: 'server-update'
-  scope: resourceGroup
-  params: {
-    name: server.outputs.name
-    location: location
-    tags: tags
-    identityName: serverIdentityName
-    containerAppsEnvironmentName: containerApps.outputs.environmentName
-    containerRegistryName: containerApps.outputs.registryName
-    entraAppClientId: registration.outputs.clientAppId
-    env: concat(serverEnv, entraProxyEnv)
-    secrets: entraProxySecrets
+    env: concat(serverEnv, entraDevEnv)
+    secrets: entraDevSecrets
   }
 }
 
@@ -275,9 +234,4 @@ output APPLICATIONINSIGHTS_CONNECTION_STRING string = useAppInsights ? applicati
 
 output MCP_SERVER_URL string = '${server.outputs.uri}/mcp'
 
-output ENTRA_APP_CLIENT_ID string = registration.outputs.clientAppId
-output ENTRA_APP_CLIENT_SP_ID string = registration.outputs.clientSpId
-
 output MCP_SERVER_BASE_URL string = mcpServerBaseUrl
-
-output OPENTELEMETRY_PLATFORM string = openTelemetryPlatform

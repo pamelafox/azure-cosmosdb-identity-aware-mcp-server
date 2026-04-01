@@ -1,12 +1,8 @@
 """
-Post-provision script to create a separate Entra app registration for local development.
-
-The Bicep deployment creates the production app registration with FIC (federated identity credentials)
-for App Service auth. This script creates a separate app registration with a client secret so the
-FastMCP AzureProvider OAuth proxy can be used for local development.
-
-This keeps the production app registration clean (no secrets) and limits the blast radius
-if the local dev secret is leaked.
+Post-provision script to:
+1. Add a federated identity credential (FIC) to the production app registration,
+   linking the managed identity created by Bicep to the Entra app created by auth_init.py.
+2. Create a separate Entra app registration for local development with a client secret.
 """
 
 import asyncio
@@ -22,6 +18,7 @@ from msgraph.generated.applications.item.add_password.add_password_post_request_
 )
 from msgraph.generated.models.api_application import ApiApplication
 from msgraph.generated.models.application import Application
+from msgraph.generated.models.federated_identity_credential import FederatedIdentityCredential
 from msgraph.generated.models.o_auth2_permission_grant import OAuth2PermissionGrant
 from msgraph.generated.models.password_credential import PasswordCredential
 from msgraph.generated.models.permission_scope import PermissionScope
@@ -144,16 +141,21 @@ async def create_client_secret(graph_client: GraphServiceClient, object_id: str)
     return password_credential.secret_text
 
 
-async def update_production_app(graph_client: GraphServiceClient) -> None:
-    """Post-provision fixups for the production app registration created by Bicep.
+async def add_federated_identity_credential(graph_client: GraphServiceClient) -> None:
+    """Add a FIC to the production app, linking the managed identity to the Entra app.
 
-    1. Update identifierUris to api://<appId> (Bicep can't self-reference appId).
-    2. Ensure a service principal exists and admin consent is granted for Graph API
-       scopes needed by the OBO flow.
+    This allows the container app's managed identity to act as the Entra app
+    without needing a client secret (MI-as-FIC pattern).
     """
-    prod_client_id = os.environ.get("ENTRA_APP_CLIENT_ID")
+    prod_client_id = os.environ.get("ENTRA_PROD_CLIENT_ID")
+    mi_principal_id = os.environ.get("SERVICE_SERVER_IDENTITY_PRINCIPAL_ID")
+    tenant_id = os.environ["AZURE_TENANT_ID"]
+
     if not prod_client_id:
-        print("No ENTRA_APP_CLIENT_ID set, skipping production app updates.")
+        print("No ENTRA_PROD_CLIENT_ID set, skipping FIC creation.")
+        return
+    if not mi_principal_id:
+        print("No SERVICE_SERVER_IDENTITY_PRINCIPAL_ID set, skipping FIC creation.")
         return
 
     # Find the production app by its client ID
@@ -169,84 +171,30 @@ async def update_production_app(graph_client: GraphServiceClient) -> None:
         return
 
     prod_app = apps.value[0]
+    object_id = prod_app.id
 
-    # 1. Fix identifier URI
-    expected_uri = f"api://{prod_client_id}"
-    if prod_app.identifier_uris and expected_uri in prod_app.identifier_uris:
-        print(f"Production app identifier URI already correct: {expected_uri}")
-    else:
-        await graph_client.applications.by_application_id(prod_app.id).patch(
-            Application(identifier_uris=[expected_uri])
-        )
-        print(f"Updated production app identifier URI to: {expected_uri}")
+    # Check if FIC already exists
+    existing_fics = await graph_client.applications.by_application_id(
+        object_id
+    ).federated_identity_credentials.get()
+    if existing_fics and existing_fics.value:
+        for fic in existing_fics.value:
+            if fic.subject == mi_principal_id:
+                print(f"FIC already exists for managed identity: {mi_principal_id}")
+                return
 
-    # 2. Ensure service principal exists and grant admin consent for OBO
-    await ensure_production_service_principal_and_consent(graph_client, prod_client_id)
-
-
-async def ensure_production_service_principal_and_consent(
-    graph_client: GraphServiceClient, client_id: str
-) -> None:
-    """Ensure the production app has a service principal and admin consent for Graph API OBO."""
-    from msgraph.generated.service_principals.service_principals_request_builder import (
-        ServicePrincipalsRequestBuilder,
+    # Create FIC
+    issuer = f"https://login.microsoftonline.com/{tenant_id}/v2.0"
+    fic = FederatedIdentityCredential(
+        name="miAsFic",
+        issuer=issuer,
+        subject=mi_principal_id,
+        audiences=["api://AzureADTokenExchange"],
     )
-
-    # Check if service principal already exists
-    query_params = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
-        filter=f"appId eq '{client_id}'"
-    )
-    request_config = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
-        query_parameters=query_params
-    )
-    sps = await graph_client.service_principals.get(request_configuration=request_config)
-    if sps and sps.value:
-        sp = sps.value[0]
-        print(f"Production service principal already exists: {sp.id}")
-    else:
-        sp = await graph_client.service_principals.post(
-            ServicePrincipal(app_id=client_id, display_name="MCP Expense Server App")
-        )
-        if sp is None or sp.id is None:
-            raise ValueError("Failed to create production service principal")
-        print(f"Created production service principal: {sp.id}")
-
-    # Check if admin consent already granted
-    from msgraph.generated.oauth2_permission_grants.oauth2_permission_grants_request_builder import (
-        Oauth2PermissionGrantsRequestBuilder,
-    )
-
-    grant_params = (
-        Oauth2PermissionGrantsRequestBuilder.Oauth2PermissionGrantsRequestBuilderGetQueryParameters(
-            filter=f"clientId eq '{sp.id}'"
-        )
-    )
-    grant_config = (
-        Oauth2PermissionGrantsRequestBuilder.Oauth2PermissionGrantsRequestBuilderGetRequestConfiguration(
-            query_parameters=grant_params
-        )
-    )
-    existing_grants = await graph_client.oauth2_permission_grants.get(request_configuration=grant_config)
-    if existing_grants and existing_grants.value:
-        print("Admin consent already granted for production app.")
-        return
-
-    # Find the Graph API service principal
-    graph_app_id = "00000003-0000-0000-c000-000000000000"
-    graph_sp = await graph_client.service_principals_with_app_id(graph_app_id).get()
-    if graph_sp is None or graph_sp.id is None:
-        raise ValueError("Failed to find Graph API service principal")
-
-    print("Granting admin consent for Graph API scopes (OBO flow) on production app...")
-    await graph_client.oauth2_permission_grants.post(
-        OAuth2PermissionGrant(
-            client_id=sp.id,
-            consent_type="AllPrincipals",
-            resource_id=graph_sp.id,
-            scope="User.Read email offline_access openid profile",
-        )
-    )
-    print("Admin consent granted for production app.")
+    await graph_client.applications.by_application_id(
+        object_id
+    ).federated_identity_credentials.post(fic)
+    print(f"Created FIC: issuer={issuer}, subject={mi_principal_id}")
 
 
 async def main():
@@ -256,21 +204,21 @@ async def main():
     credential = AzureDeveloperCliCredential(tenant_id=auth_tenant)
     graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
 
-    # Always run production app fixups after Bicep provision
-    await update_production_app(graph_client)
+    # Add FIC to production app (links managed identity to Entra app)
+    await add_federated_identity_credential(graph_client)
 
     # Skip local dev app creation if already configured
-    if os.getenv("ENTRA_PROXY_AZURE_CLIENT_ID") and os.getenv("ENTRA_PROXY_AZURE_CLIENT_SECRET"):
-        print(f"Local dev app already configured: {os.environ['ENTRA_PROXY_AZURE_CLIENT_ID']}")
+    if os.getenv("ENTRA_DEV_CLIENT_ID") and os.getenv("ENTRA_DEV_CLIENT_SECRET"):
+        print(f"Local dev app already configured: {os.environ['ENTRA_DEV_CLIENT_ID']}")
         return
 
     object_id, client_id = await create_app_registration(graph_client)
-    update_azd_env("ENTRA_PROXY_AZURE_CLIENT_ID", client_id)
+    update_azd_env("ENTRA_DEV_CLIENT_ID", client_id)
 
     await create_service_principal_and_grant_consent(graph_client, client_id)
 
     secret = await create_client_secret(graph_client, object_id)
-    update_azd_env("ENTRA_PROXY_AZURE_CLIENT_SECRET", secret)
+    update_azd_env("ENTRA_DEV_CLIENT_SECRET", secret)
 
     print("Local dev app configured and secret saved to azd environment.")
     print("Run 'bash infra/write_env.sh' to update your .env file.")
