@@ -37,3 +37,14 @@ When updating or adding Python dependencies:
 1. Edit `pyproject.toml` with the new or updated version constraints.
 2. Run `uv lock` to re-resolve dependencies (use `uv lock -P <package>` to upgrade only a specific package).
 3. Run `uv sync` to install the updated lockfile into the virtual environment.
+
+## Slide design
+
+When editing presentation slides:
+
+1. Section and slide headlines must fit on a single line; do not allow headline wrapping onto two lines.
+2. If a headline wraps, shorten the text or move qualifiers into the supporting body copy instead of shrinking the design to force it in.
+3. In any diagram with an arrow and a badge or label placed on that arrow, keep visible line on both sides of the badge so the start and end of the arrow are clearly readable.
+4. Use real product logos or service icons when they are available; prefer recognizable brand visuals over generic placeholders.
+5. In comparison or architecture diagrams, align equivalent labels, titles, and cards to shared baselines when possible so the layout reads cleanly.
+6. Size boxes and cards for their content; maintain enough internal padding that logos, labels, and supporting text never overlap or spill outside the shape.
