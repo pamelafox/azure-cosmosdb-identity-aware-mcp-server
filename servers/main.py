@@ -25,11 +25,11 @@ from azure.identity.aio import AzureDeveloperCliCredential, DefaultAzureCredenti
 from azure.monitor.opentelemetry import configure_azure_monitor
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
-from fastmcp.tools import ToolResult
 from fastmcp.server.auth import AuthContext, RemoteAuthProvider
 from fastmcp.server.auth.providers.azure import AzureJWTVerifier
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.tools import ToolResult
 from msal import ConfidentialClientApplication, ManagedIdentityClient, TokenCache, UserAssignedManagedIdentity
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
 from prefab_ui.components import Column, DataTable, DataTableColumn, Heading
