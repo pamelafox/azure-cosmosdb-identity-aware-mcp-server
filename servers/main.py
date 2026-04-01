@@ -32,7 +32,6 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.tools import ToolResult
 from msal import ConfidentialClientApplication, ManagedIdentityClient, TokenCache, UserAssignedManagedIdentity
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
-from prefab_ui.components import Column, DataTable, DataTableColumn, Heading
 from rich.console import Console
 from rich.logging import RichHandler
 from starlette.responses import JSONResponse
@@ -269,8 +268,8 @@ async def add_user_expense(
         return f"Error: Unable to add expense - {str(e)}"
 
 
-@mcp.tool(app=True)
-async def get_user_expenses(ctx: Context) -> ToolResult:
+@mcp.tool
+async def get_user_expenses(ctx: Context):
     """Get the authenticated user's expense data from Cosmos DB."""
     try:
         user_id = await ctx.get_state("user_id")
@@ -286,39 +285,20 @@ async def get_user_expenses(ctx: Context) -> ToolResult:
         if not expenses_data:
             return "No expenses found."
 
-        rows = [
-            {
-                "date": e.get("date", "N/A"),
-                "amount": e.get("amount", 0),
-                "category": e.get("category", "N/A"),
-                "description": e.get("description", "N/A"),
-                "payment": e.get("payment_method", "N/A"),
-            }
-            for e in expenses_data
-        ]
-
-        total = sum(r["amount"] for r in rows)
-
-        with Column(gap=4, css_class="p-6") as view:
-            Heading("My Expenses")
-            DataTable(
-                columns=[
-                    DataTableColumn(key="date", header="Date", sortable=True),
-                    DataTableColumn(key="amount", header="Amount", sortable=True),
-                    DataTableColumn(key="category", header="Category", sortable=True),
-                    DataTableColumn(key="description", header="Description"),
-                    DataTableColumn(key="payment", header="Payment"),
-                ],
-                rows=rows,
-                search=True,
-                paginated=True,
-                page_size=15,
-            )
-
-        return ToolResult(
-            content=json.dumps(rows),
-            structured_content=view,
+        result = json.dumps(
+            [
+                {
+                    "date": e.get("date", "N/A"),
+                    "amount": e.get("amount", 0),
+                    "category": e.get("category", "N/A"),
+                    "description": e.get("description", "N/A"),
+                    "payment_method": e.get("payment_method", "N/A"),
+                }
+                for e in expenses_data
+            ],
+            indent=2,
         )
+        return result
 
     except Exception as e:
         logger.error(f"Error reading expenses: {str(e)}")

@@ -1,3 +1,8 @@
 {
-    "chat.mcp.autostart": "never"
+    "chat.mcp.autostart": "never",
+    "chat.mcp.serverSampling": {
+        "azure-cosmosdb-identity-aware-mcp-server/.vscode/mcp.json: com.microsoft/azure": {
+            "allowedDuringChat": true
+        }
+    }
 }

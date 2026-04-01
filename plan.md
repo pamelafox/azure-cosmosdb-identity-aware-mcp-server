@@ -17,7 +17,7 @@ Presentation outline:
 * Slides: MCP server architecture overview (for this demo)
 * Slides: MCP authentication options overview
 * Code walkthrough: Setting up FastMCP server with OAuth authentication
-* Demo: Go through full auth flow in VS Code (reset the OAuth credential providers in VS Code first)
+* Demo: Go through full auth flow in VS Code (disconnect account first)
 * Slides: Integrating Cosmos DB with MCP server
 * Slides: Designing partition keys for per-user data isolation
 * Code walkthrough: Using Cosmos DB Python SDK to store per-user data
@@ -28,6 +28,7 @@ Presentation outline:
 * Demo: Use a tool that requires elevated permissions, show how access is granted/denied based on group membership
 * Slides: Tips for developing with Cosmos DB and MCP servers
 * Demo: Use GitHub Copilot agent skills to analyze Cosmos DB data and optimize queries
+   * "Review my Cosmos DB data model"
 * Conclusion and next steps for building your own identity-aware MCP servers with Cosmos DB
 
 ## MCP auth approach with Entra ID
@@ -238,9 +239,19 @@ I presented on related topics for this series:
 
 The slides may be useful.
 
+* Cosmos DB MCP Documentation: <https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/tools/azure-cosmos-db>
+* Cosmos DB agent kit: <https://github.com/AzureCosmosDB/cosmosdb-agent-kit>
+
+## MCP app exploration
+
+There were too many issues, so I removed the MCP apps.
+
+Issues:
+
+1. The app was not responsive to interaction in VS Code (filed)
+2. VS Code rendered the data a second time anyway, so the app was redundant (DMed Jeremiah)
+
 ## TODOs
 
-- [ ] Verify the new MCP app works for getting user expenses
-- [ ] Add an MCP app for expense stats tool as well
 - [ ] See if App Insights actually works
 - [ ] Add Cosmos DB extension to the repo

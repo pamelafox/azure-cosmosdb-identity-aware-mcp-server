@@ -7,6 +7,20 @@
 		"expenses-mcp-deployed": {
 			"url": "https://pf-cosmos-mcp-5-server.jollysmoke-d8fde274.centralus.azurecontainerapps.io/mcp",
 			"type": "http"
+		},
+		"com.microsoft/azure": {
+			"type": "stdio",
+			"command": "dnx",
+			"args": [
+				"Azure.Mcp@2.0.0-beta.36",
+				"--yes",
+				"--",
+				"server",
+				"start"
+			],
+			"gallery": "https://api.mcp.github.com",
+			"version": "2.0.0-beta.36"
 		}
-	}
+	},
+	"inputs": []
 }
