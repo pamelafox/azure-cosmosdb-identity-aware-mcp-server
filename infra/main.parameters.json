@@ -11,14 +11,20 @@
       "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
       },
+      "serverExists": {
+        "value": "${SERVICE_SERVER_RESOURCE_EXISTS=false}"
+      },
       "openTelemetryPlatform": {
         "value": "${OPENTELEMETRY_PLATFORM=appinsights}"
       },
       "entraAdminGroupId": {
         "value": "${ENTRA_ADMIN_GROUP_ID}"
       },
-      "logfireToken": {
-        "value": "${LOGFIRE_TOKEN}"
+      "entraProxyClientId": {
+        "value": "${ENTRA_PROXY_AZURE_CLIENT_ID}"
+      },
+      "entraProxyClientSecret": {
+        "value": "${ENTRA_PROXY_AZURE_CLIENT_SECRET}"
       }
     }
   }

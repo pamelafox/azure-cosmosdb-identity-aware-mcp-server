@@ -238,6 +238,11 @@ I presented on related topics for this series:
 
 The slides may be useful.
 
+## TODOs
+
+- [ ] DRY up `infra/appupdate.bicep` and `infra/server.bicep` — both define the same container app config (tags, ingress, health probes, identity, secrets). Extract shared config or find a way to avoid full env duplication in appupdate.
+- [ ] Consider using msgraph SDK for all Entra app registration code (versus Bicep/SDK split currently)
+
 ## Open questions
 
 1) Should we do something fun with MCP apps, now that they're supported by FastMCP 3?

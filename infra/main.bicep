@@ -12,10 +12,11 @@ param location string
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
-@description('OpenTelemetry platform for monitoring: appinsights, logfire, or none')
+param serverExists bool = false
+
+@description('OpenTelemetry platform for monitoring: appinsights or none')
 @allowed([
   'appinsights'
-  'logfire'
   'none'
 ])
 param openTelemetryPlatform string = 'appinsights'
@@ -26,9 +27,12 @@ var useAppInsights = openTelemetryPlatform == 'appinsights'
 @description('Entra ID group ID for admin access to expense statistics')
 param entraAdminGroupId string = ''
 
+@description('Azure/Entra ID app registration client ID for OAuth Proxy')
+param entraProxyClientId string = ''
+
 @secure()
-@description('Logfire token used by the server as a secret')
-param logfireToken string = ''
+@description('Azure/Entra ID app registration client secret for OAuth Proxy')
+param entraProxyClientSecret string = ''
 
 @description('Service Management Reference for the app registration')
 param serviceManagementReference string = ''
@@ -123,75 +127,107 @@ module applicationInsightsDashboard 'appinsights-dashboard.bicep' = if (useAppIn
   }
 }
 
-// App Service Plan
-module appServicePlan 'appserviceplan.bicep' = {
-  name: 'serviceplan'
+// Container apps host (including container registry)
+module containerApps 'core/host/container-apps.bicep' = {
+  name: 'container-apps'
   scope: resourceGroup
   params: {
-    name: '${prefix}-serviceplan'
+    name: 'app'
     location: location
     tags: tags
-    sku: {
-      name: 'S1'
-    }
-    reserved: true
+    containerAppsEnvironmentName: '${prefix}-containerapps-env'
+    containerRegistryName: '${take(replace(prefix, '-', ''), 42)}registry'
+    logAnalyticsWorkspaceName: useAppInsights ? logAnalyticsWorkspace!.outputs.name : ''
+    usePrivateIngress: false
   }
 }
 
-// App settings shared between initial deployment and auth update
-var serverAppSettings = {
-  RUNNING_IN_PRODUCTION: 'true'
-  AZURE_COSMOSDB_ACCOUNT: cosmosDb.outputs.name
-  AZURE_COSMOSDB_DATABASE: cosmosDbDatabaseName
-  AZURE_COSMOSDB_USER_CONTAINER: cosmosDbUserContainerName
-  APPLICATIONINSIGHTS_CONNECTION_STRING: useAppInsights ? applicationInsights!.outputs.connectionString : ''
-  OPENTELEMETRY_PLATFORM: openTelemetryPlatform
-  ENTRA_ADMIN_GROUP_ID: entraAdminGroupId
-  LOGFIRE_TOKEN: logfireToken
-  SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
-  ENABLE_ORYX_BUILD: 'true'
-}
+// Container app for MCP server
+var containerAppDomain = replace('${take(prefix,15)}-server', '--', '-')
+var mcpServerBaseUrl = 'https://${containerAppDomain}.${containerApps.outputs.defaultDomain}'
+var serverIdentityName = '${prefix}-id-server'
 
-// App Service for MCP server
-module web 'appservice.bicep' = {
-  name: 'web'
+// Managed identity for the server container app
+module serverIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.0' = {
+  name: 'server-identity'
   scope: resourceGroup
   params: {
-    name: replace('${take(prefix, 19)}-server', '--', '-')
+    name: serverIdentityName
     location: location
     tags: tags
-    appServicePlanId: appServicePlan.outputs.id
-    appCommandLine: 'uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000'
-    appSettings: serverAppSettings
   }
 }
 
-// Entra app registration
+// Shared environment variables used by both server.bicep and appupdate.bicep
+var serverEnv = [
+  { name: 'RUNNING_IN_PRODUCTION', value: 'true' }
+  { name: 'AZURE_CLIENT_ID', value: serverIdentity.outputs.clientId }
+  { name: 'AZURE_COSMOSDB_ACCOUNT', value: cosmosDb.outputs.name }
+  { name: 'AZURE_COSMOSDB_DATABASE', value: cosmosDbDatabaseName }
+  { name: 'AZURE_COSMOSDB_USER_CONTAINER', value: cosmosDbUserContainerName }
+  { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: useAppInsights ? applicationInsights!.outputs.connectionString : '' }
+  { name: 'MCP_ENTRY', value: 'auth_entra_mcp' }
+  { name: 'OPENTELEMETRY_PLATFORM', value: openTelemetryPlatform }
+  { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
+  { name: 'MCP_SERVER_BASE_URL', value: mcpServerBaseUrl }
+  { name: 'ENTRA_ADMIN_GROUP_ID', value: entraAdminGroupId }
+]
+
+var entraProxyEnv = !empty(entraProxyClientId) ? [
+  { name: 'ENTRA_PROXY_AZURE_CLIENT_ID', value: entraProxyClientId }
+  { name: 'ENTRA_PROXY_AZURE_CLIENT_SECRET', secretRef: 'entra-proxy-client-secret' }
+] : []
+
+var entraProxySecrets = !empty(entraProxyClientSecret) ? [
+  { name: 'entra-proxy-client-secret', value: entraProxyClientSecret }
+] : []
+
+module server 'server.bicep' = {
+  name: 'server'
+  scope: resourceGroup
+  params: {
+    name: containerAppDomain
+    location: location
+    tags: tags
+    identityName: serverIdentityName
+    containerAppsEnvironmentName: containerApps.outputs.environmentName
+    containerRegistryName: containerApps.outputs.registryName
+    exists: serverExists
+    env: concat(serverEnv, entraProxyEnv)
+    secrets: entraProxySecrets
+  }
+}
+
+// Entra app registration with managed identity federated credential
 var issuer = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
+var clientAppName = '${prefix}-entra-mcp-app'
 module registration 'appregistration.bicep' = {
   name: 'reg'
   scope: resourceGroup
   params: {
-    clientAppName: '${prefix}-entra-mcp-app'
+    clientAppName: clientAppName
     clientAppDisplayName: 'MCP Expense Server App'
-    webAppEndpoint: web.outputs.uri
-    webAppIdentityId: web.outputs.identityPrincipalId
+    webAppIdentityId: server.outputs.identityPrincipalId
     issuer: issuer
     serviceManagementReference: serviceManagementReference
   }
 }
 
-// Set Entra env vars on App Service (after registration is created to avoid circular dependency)
-module appupdate 'appupdate.bicep' = {
-  name: 'appupdate'
+// Patch the container app with the production app registration client ID
+// (breaks circular dependency: server needs client ID, registration needs server URI)
+module serverUpdate 'appupdate.bicep' = {
+  name: 'server-update'
   scope: resourceGroup
   params: {
-    appServiceName: web.outputs.name
-    appSettings: union(serverAppSettings, {
-      OVERRIDE_USE_MI_FIC_ASSERTION_CLIENTID: web.outputs.identityClientId
-      ENTRA_PROXY_AZURE_CLIENT_ID: registration.outputs.clientAppId
-      AZURE_TENANT_ID: tenant().tenantId
-    })
+    name: server.outputs.name
+    location: location
+    tags: tags
+    identityName: serverIdentityName
+    containerAppsEnvironmentName: containerApps.outputs.environmentName
+    containerRegistryName: containerApps.outputs.registryName
+    entraAppClientId: registration.outputs.clientAppId
+    env: concat(serverEnv, entraProxyEnv)
+    secrets: entraProxySecrets
   }
 }
 
@@ -212,7 +248,7 @@ module cosmosDbRoleServer 'core/security/documentdb-sql-role.bicep' = {
   name: 'cosmosdb-role-server'
   params: {
     databaseAccountName: cosmosDb.outputs.name
-    principalId: web.outputs.identityPrincipalId
+    principalId: server.outputs.identityPrincipalId
     roleDefinitionId: '/${subscription().id}/resourceGroups/${resourceGroup.name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDb.outputs.name}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
   }
 }
@@ -221,8 +257,14 @@ output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
-output SERVICE_SERVER_NAME string = web.outputs.name
-output SERVICE_SERVER_URI string = web.outputs.uri
+output SERVICE_SERVER_IDENTITY_PRINCIPAL_ID string = server.outputs.identityPrincipalId
+output SERVICE_SERVER_NAME string = server.outputs.name
+output SERVICE_SERVER_URI string = server.outputs.uri
+output SERVICE_SERVER_IMAGE_NAME string = server.outputs.imageName
+
+output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 
 output AZURE_COSMOSDB_ACCOUNT string = cosmosDb.outputs.name
 output AZURE_COSMOSDB_ENDPOINT string = cosmosDb.outputs.endpoint
@@ -231,6 +273,11 @@ output AZURE_COSMOSDB_USER_CONTAINER string = cosmosDbUserContainerName
 
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = useAppInsights ? applicationInsights!.outputs.connectionString : ''
 
-output MCP_SERVER_URL string = '${web.outputs.uri}/mcp'
+output MCP_SERVER_URL string = '${server.outputs.uri}/mcp'
+
+output ENTRA_APP_CLIENT_ID string = registration.outputs.clientAppId
+output ENTRA_APP_CLIENT_SP_ID string = registration.outputs.clientSpId
+
+output MCP_SERVER_BASE_URL string = mcpServerBaseUrl
 
 output OPENTELEMETRY_PLATFORM string = openTelemetryPlatform

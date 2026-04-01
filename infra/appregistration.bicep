@@ -35,8 +35,6 @@ param serviceManagementReference string = ''
 
 param issuer string
 
-param webAppEndpoint string
-
 // VS Code client ID for MCP pre-authorization
 var vsCodeClientId = 'aebc6443-996d-45c2-90f0-388ff96faa56'
 
@@ -60,7 +58,8 @@ resource clientApp 'Microsoft.Graph/applications@v1.0' = {
   serviceManagementReference: empty(serviceManagementReference) ? null : serviceManagementReference
   web: {
     redirectUris: [
-      '${webAppEndpoint}/.auth/login/aad/callback'
+      'https://vscode.dev/redirect'
+      'http://localhost'
     ]
     implicitGrantSettings: { enableIdTokenIssuance: true }
   }

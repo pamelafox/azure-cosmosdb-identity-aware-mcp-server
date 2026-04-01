@@ -6,10 +6,13 @@ metadata:
 
 services:
   server:
-    project: ./servers
-    language: py
-    host: appservice
-    deployTimeout: 600
+    project: .
+    language: docker
+    host: containerapp
+    docker:
+      remoteBuild: true
+      path: ./servers/Dockerfile
+      context: .
 hooks:
   postprovision:
     posix:

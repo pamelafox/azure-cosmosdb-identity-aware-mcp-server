@@ -181,27 +181,6 @@ Or you can use Application Insights directly:
 2. In Application Insights, go to "Transaction Search" to view traces from the MCP server.
 3. You can filter and analyze traces to monitor performance and diagnose issues.
 
-### Viewing traces in Logfire
-
-You can also view OpenTelemetry traces in [Logfire](https://logfire.io/) by configuring the MCP server to send traces there.
-
-1. Create a Logfire account and get your write token from the Logfire dashboard.
-
-2. Set the azd environment variables to enable Logfire:
-
-   ```bash
-   azd env set OPENTELEMETRY_PLATFORM logfire
-   azd env set LOGFIRE_TOKEN <your-logfire-write-token>
-   ```
-
-3. Provision and deploy:
-
-   ```bash
-   azd up
-   ```
-
-4. Open the Logfire dashboard to view traces from the MCP server.
-
 ---
 
 ## Resources

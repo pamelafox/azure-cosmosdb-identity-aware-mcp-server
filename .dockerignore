@@ -1,0 +1,17 @@
+.azure
+.venv
+.devcontainer
+
+infra/*.bicep
+infra/*.ps1
+infra/*.sh
+infra/core
+
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.ruff_cache
+.env
+.git

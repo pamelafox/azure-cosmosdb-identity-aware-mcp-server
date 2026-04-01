@@ -8,6 +8,7 @@ and the server validates the token using Entra's public signing keys.
 Run locally with: cd servers && uv run uvicorn auth_entra_mcp:app --host 0.0.0.0 --port 8000
 """
 
+import json
 import logging
 import os
 import uuid
@@ -17,19 +18,21 @@ from enum import Enum
 from typing import Annotated
 
 import httpx
-import logfire
+import requests
 from azure.core.settings import settings
 from azure.cosmos.aio import CosmosClient
-from azure.identity.aio import DefaultAzureCredential, ManagedIdentityCredential
+from azure.identity.aio import AzureDeveloperCliCredential, DefaultAzureCredential, ManagedIdentityCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
-from fastmcp.server.auth import RemoteAuthProvider
+from fastmcp.tools import ToolResult
+from fastmcp.server.auth import AuthContext, RemoteAuthProvider
 from fastmcp.server.auth.providers.azure import AzureJWTVerifier
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import Middleware, MiddlewareContext
-from msal import ConfidentialClientApplication, TokenCache
+from msal import ConfidentialClientApplication, ManagedIdentityClient, TokenCache, UserAssignedManagedIdentity
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
+from prefab_ui.components import Column, DataTable, DataTableColumn, Heading
 from rich.console import Console
 from rich.logging import RichHandler
 from starlette.responses import JSONResponse
@@ -67,17 +70,14 @@ opentelemetry_platform = os.getenv("OPENTELEMETRY_PLATFORM", "none").lower()
 if opentelemetry_platform == "appinsights" and os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     logger.info("Setting up Azure Monitor instrumentation")
     configure_azure_monitor()
-elif opentelemetry_platform == "logfire" and os.getenv("LOGFIRE_TOKEN"):
-    logger.info("Setting up Logfire instrumentation")
-    logfire.configure(service_name="expenses-mcp", send_to_logfire=True)
 
 # Configure Cosmos DB client
 if RUNNING_IN_PRODUCTION:
     azure_credential = ManagedIdentityCredential(client_id=os.environ["AZURE_CLIENT_ID"])
     logger.info("Using Managed Identity Credential for Azure authentication")
 else:
-    azure_credential = DefaultAzureCredential()
-    logger.info("Using Default Azure Credential for Azure authentication")
+    azure_credential = AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
+    logger.info("Using Azure Developer CLI Credential for Azure authentication")
 cosmos_client = CosmosClient(
     url=f"https://{os.environ['AZURE_COSMOSDB_ACCOUNT']}.documents.azure.com:443/",
     credential=azure_credential,
@@ -88,9 +88,14 @@ cosmos_container = cosmos_db.get_container_client(os.environ["AZURE_COSMOSDB_USE
 # Configure authentication: RemoteAuthProvider with AzureJWTVerifier
 # VS Code authenticates directly with Entra (pre-registered as authorized client).
 # The server validates tokens using Entra's public signing keys — no client secret needed.
-base_url = os.environ.get("SERVER_BASE_URL", "http://localhost:8000")
+# In production, use the production app registration (ENTRA_APP_CLIENT_ID from appregistration.bicep).
+# Locally, use the dev app registration (ENTRA_PROXY_AZURE_CLIENT_ID).
+entra_client_id = os.environ.get("ENTRA_APP_CLIENT_ID") or os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"]
+base_url = os.environ.get("MCP_SERVER_BASE_URL", "http://localhost:8000")
+# The production app's identifierUris is corrected to api://<appId> by auth_postprovision.py
+# after Bicep provision, so AzureJWTVerifier's default identifier_uri of api://<client_id> matches.
 verifier = AzureJWTVerifier(
-    client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+    client_id=entra_client_id,
     tenant_id=os.environ["AZURE_TENANT_ID"],
     required_scopes=["user_impersonation"],
 )
@@ -101,7 +106,7 @@ auth = RemoteAuthProvider(
 )
 logger.info(
     "Using RemoteAuthProvider for direct Entra auth (client_id=%s, tenant=%s)",
-    os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+    entra_client_id,
     os.environ["AZURE_TENANT_ID"],
 )
 
@@ -110,10 +115,9 @@ logger.info(
 # Locally: uses a client secret from the local dev app registration
 client_secret = os.environ.get("ENTRA_PROXY_AZURE_CLIENT_SECRET")
 if RUNNING_IN_PRODUCTION:
-    from msal import ManagedIdentityClient, UserAssignedManagedIdentity
-
     mi_client = ManagedIdentityClient(
         UserAssignedManagedIdentity(client_id=os.environ["AZURE_CLIENT_ID"]),
+        http_client=requests.Session(),
         token_cache=TokenCache(),
     )
 
@@ -124,7 +128,7 @@ if RUNNING_IN_PRODUCTION:
         return result["access_token"]
 
     confidential_client = ConfidentialClientApplication(
-        client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        client_id=entra_client_id,
         client_credential={"client_assertion": _get_mi_assertion},
         authority=f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}",
         token_cache=TokenCache(),
@@ -132,7 +136,7 @@ if RUNNING_IN_PRODUCTION:
     logger.info("Using managed identity federated credential for OBO flow")
 elif client_secret:
     confidential_client = ConfidentialClientApplication(
-        client_id=os.environ["ENTRA_PROXY_AZURE_CLIENT_ID"],
+        client_id=entra_client_id,
         client_credential=client_secret,
         authority=f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}",
         token_cache=TokenCache(),
@@ -164,6 +168,29 @@ async def check_user_in_group(graph_token: str, group_id: str) -> bool:
         membership_count = data.get("@odata.count", 0)
         logger.info(f"User membership count in group {group_id}: {membership_count}")
         return membership_count > 0
+
+
+async def require_admin_group(ctx: AuthContext) -> bool:
+    """Auth check that verifies the user is in the admin group via OBO + Graph API."""
+    admin_group_id = os.environ.get("ENTRA_ADMIN_GROUP_ID", "")
+    if not admin_group_id:
+        logger.error("ENTRA_ADMIN_GROUP_ID not configured")
+        return False
+    if not confidential_client:
+        logger.error("No confidential client available for OBO flow")
+        return False
+    if ctx.token is None:
+        return False
+    graph_resource_access_token = confidential_client.acquire_token_on_behalf_of(
+        user_assertion=ctx.token.token, scopes=["https://graph.microsoft.com/.default"]
+    )
+    if "error" in graph_resource_access_token:
+        logger.error(
+            "OBO token acquisition failed: %s",
+            graph_resource_access_token.get("error_description", "Unknown error"),
+        )
+        return False
+    return await check_user_in_group(graph_resource_access_token["access_token"], admin_group_id)
 
 
 # Middleware to populate user_id in per-request context state
@@ -245,10 +272,9 @@ async def add_user_expense(
         return f"Error: Unable to add expense - {str(e)}"
 
 
-@mcp.tool
-async def get_user_expenses(ctx: Context):
+@mcp.tool(app=True)
+async def get_user_expenses(ctx: Context) -> ToolResult:
     """Get the authenticated user's expense data from Cosmos DB."""
-
     try:
         user_id = await ctx.get_state("user_id")
         if not user_id:
@@ -263,53 +289,54 @@ async def get_user_expenses(ctx: Context):
         if not expenses_data:
             return "No expenses found."
 
-        expense_summary = f"Expense data ({len(expenses_data)} entries):\n\n"
-        for expense in expenses_data:
-            expense_summary += (
-                f"Date: {expense.get('date', 'N/A')}, "
-                f"Amount: ${expense.get('amount', 0)}, "
-                f"Category: {expense.get('category', 'N/A')}, "
-                f"Description: {expense.get('description', 'N/A')}, "
-                f"Payment: {expense.get('payment_method', 'N/A')}\n"
+        rows = [
+            {
+                "date": e.get("date", "N/A"),
+                "amount": e.get("amount", 0),
+                "category": e.get("category", "N/A"),
+                "description": e.get("description", "N/A"),
+                "payment": e.get("payment_method", "N/A"),
+            }
+            for e in expenses_data
+        ]
+
+        total = sum(r["amount"] for r in rows)
+
+        with Column(gap=4, css_class="p-6") as view:
+            Heading("My Expenses")
+            DataTable(
+                columns=[
+                    DataTableColumn(key="date", header="Date", sortable=True),
+                    DataTableColumn(key="amount", header="Amount", sortable=True),
+                    DataTableColumn(key="category", header="Category", sortable=True),
+                    DataTableColumn(key="description", header="Description"),
+                    DataTableColumn(key="payment", header="Payment"),
+                ],
+                rows=rows,
+                search=True,
+                paginated=True,
+                page_size=15,
             )
 
-        return expense_summary
+        return ToolResult(
+            content=json.dumps(rows),
+            structured_content=view,
+        )
 
     except Exception as e:
         logger.error(f"Error reading expenses: {str(e)}")
         return f"Error: Unable to retrieve expense data - {str(e)}"
 
 
-@mcp.tool
+# Component-level authorization: require_admin_group is evaluated both at tool discovery
+# (tools/list) and at tool invocation time, so non-admin users won't even see this tool.
+# See: https://gofastmcp.com/servers/authorization#component-level-authorization
+@mcp.tool(auth=require_admin_group)
 async def get_expense_stats(ctx: Context):
     """Get a statistical summary of expenses (count per category) for all users.
     Only accessible to users in the authorized admin group.
     """
-    admin_group_id = os.environ.get("ENTRA_ADMIN_GROUP_ID", "")
-    if not admin_group_id:
-        return "Error: Admin group ID not configured. Set ENTRA_ADMIN_GROUP_ID environment variable."
-
     try:
-        if not confidential_client:
-            return "Error: Admin group check requires a client secret (ENTRA_PROXY_AZURE_CLIENT_SECRET)."
-
-        access_token = get_access_token()
-        if not access_token:
-            return "Error: Authentication required"
-        graph_resource_access_token = confidential_client.acquire_token_on_behalf_of(
-            user_assertion=access_token.token, scopes=["https://graph.microsoft.com/.default"]
-        )
-        if "error" in graph_resource_access_token:
-            logger.error(
-                "OBO token acquisition failed: %s",
-                graph_resource_access_token.get("error_description", "Unknown error"),
-            )
-            return "Error: Unable to verify permissions. Please try again later."
-        is_admin = await check_user_in_group(graph_resource_access_token["access_token"], admin_group_id)
-
-        if not is_admin:
-            return "Error: Unauthorized. You do not have permission to access expense statistics."
-
         # Query Cosmos DB for stats across all users
         # We fetch categories and aggregate in Python to avoid cross-partition GROUP BY limitations
         query = "SELECT c.category FROM c"

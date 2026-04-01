@@ -1,50 +1,37 @@
-@description('Name of the existing Container App to update')
 param name string
-
 param location string = resourceGroup().location
 param tags object = {}
-param serviceName string = 'server'
 
-@description('Name of the user-assigned managed identity')
 param identityName string
-
-@description('Name of the Container Apps environment')
 param containerAppsEnvironmentName string
-
-@description('Name of the Container Registry')
 param containerRegistryName string
+param serviceName string = 'server'
+param exists bool
 
-@description('Production Entra app registration client ID (from appregistration.bicep)')
-param entraAppClientId string
+@description('Environment variables for the container')
+param env array = []
 
-@description('The shared env array from main.bicep')
-param env array
-
-@description('The secrets array from main.bicep')
+@description('Secrets for the container')
 param secrets array = []
 
-// Patch the container app to add the production ENTRA_APP_CLIENT_ID env var.
-// This runs after appregistration.bicep creates the app registration,
-// breaking the circular dependency (server needs client ID, registration needs server URI).
-module patchEnv 'core/host/container-app-upsert.bicep' = {
-  name: '${name}-env-patch'
+resource serverIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: identityName
+}
+
+module app 'core/host/container-app-upsert.bicep' = {
+  name: '${serviceName}-container-app-module'
   params: {
     name: name
     location: location
     tags: union(tags, { 'azd-service-name': serviceName })
-    identityName: identityName
+    identityName: serverIdentity.name
+    exists: exists
     containerAppsEnvironmentName: containerAppsEnvironmentName
     containerRegistryName: containerRegistryName
-    exists: true
     ingressEnabled: true
+    env: env
     secrets: secrets
     targetPort: 8000
-    env: union(env, [
-      {
-        name: 'ENTRA_APP_CLIENT_ID'
-        value: entraAppClientId
-      }
-    ])
     probes: [
       {
         type: 'Startup'
@@ -78,3 +65,9 @@ module patchEnv 'core/host/container-app-upsert.bicep' = {
     ]
   }
 }
+
+output identityPrincipalId string = serverIdentity.properties.principalId
+output name string = app.outputs.name
+output hostName string = app.outputs.hostName
+output uri string = app.outputs.uri
+output imageName string = app.outputs.imageName

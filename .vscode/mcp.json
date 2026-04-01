@@ -1,8 +1,12 @@
 {
 	"servers": {
-		"expenses-mcp-http": {
+		"expenses-mcp-local": {
 			"type": "http",
 			"url": "http://localhost:8000/mcp"
+		},
+		"expenses-mcp-deployed": {
+			"url": "https://pf-cosmos-mcp-5-server.jollysmoke-d8fde274.centralus.azurecontainerapps.io/mcp",
+			"type": "http"
 		}
 	},
 	"inputs": []

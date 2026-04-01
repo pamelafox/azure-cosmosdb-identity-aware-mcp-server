@@ -16,19 +16,20 @@ import subprocess
 from azure.identity.aio import AzureDeveloperCliCredential
 from dotenv_azd import load_azd_env
 from msgraph import GraphServiceClient
+from msgraph.generated.applications.applications_request_builder import ApplicationsRequestBuilder
 from msgraph.generated.applications.item.add_password.add_password_post_request_body import (
     AddPasswordPostRequestBody,
 )
 from msgraph.generated.models.api_application import ApiApplication
 from msgraph.generated.models.application import Application
+from msgraph.generated.models.o_auth2_permission_grant import OAuth2PermissionGrant
 from msgraph.generated.models.password_credential import PasswordCredential
 from msgraph.generated.models.permission_scope import PermissionScope
 from msgraph.generated.models.pre_authorized_application import PreAuthorizedApplication
 from msgraph.generated.models.required_resource_access import RequiredResourceAccess
 from msgraph.generated.models.resource_access import ResourceAccess
-from msgraph.generated.models.spa_application import SpaApplication
-from msgraph.generated.models.o_auth2_permission_grant import OAuth2PermissionGrant
 from msgraph.generated.models.service_principal import ServicePrincipal
+from msgraph.generated.models.spa_application import SpaApplication
 from msgraph.generated.models.web_application import WebApplication
 
 LOCAL_DEV_APP_DISPLAY_NAME = "MCP Expense Server (Local Dev)"
@@ -143,17 +144,125 @@ async def create_client_secret(graph_client: GraphServiceClient, object_id: str)
     return password_credential.secret_text
 
 
+async def update_production_app(graph_client: GraphServiceClient) -> None:
+    """Post-provision fixups for the production app registration created by Bicep.
+
+    1. Update identifierUris to api://<appId> (Bicep can't self-reference appId).
+    2. Ensure a service principal exists and admin consent is granted for Graph API
+       scopes needed by the OBO flow.
+    """
+    prod_client_id = os.environ.get("ENTRA_APP_CLIENT_ID")
+    if not prod_client_id:
+        print("No ENTRA_APP_CLIENT_ID set, skipping production app updates.")
+        return
+
+    # Find the production app by its client ID
+    query_params = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+        filter=f"appId eq '{prod_client_id}'"
+    )
+    request_config = ApplicationsRequestBuilder.ApplicationsRequestBuilderGetRequestConfiguration(
+        query_parameters=query_params
+    )
+    apps = await graph_client.applications.get(request_configuration=request_config)
+    if not apps or not apps.value:
+        print(f"Production app not found for client ID: {prod_client_id}")
+        return
+
+    prod_app = apps.value[0]
+
+    # 1. Fix identifier URI
+    expected_uri = f"api://{prod_client_id}"
+    if prod_app.identifier_uris and expected_uri in prod_app.identifier_uris:
+        print(f"Production app identifier URI already correct: {expected_uri}")
+    else:
+        await graph_client.applications.by_application_id(prod_app.id).patch(
+            Application(identifier_uris=[expected_uri])
+        )
+        print(f"Updated production app identifier URI to: {expected_uri}")
+
+    # 2. Ensure service principal exists and grant admin consent for OBO
+    await ensure_production_service_principal_and_consent(graph_client, prod_client_id)
+
+
+async def ensure_production_service_principal_and_consent(
+    graph_client: GraphServiceClient, client_id: str
+) -> None:
+    """Ensure the production app has a service principal and admin consent for Graph API OBO."""
+    from msgraph.generated.service_principals.service_principals_request_builder import (
+        ServicePrincipalsRequestBuilder,
+    )
+
+    # Check if service principal already exists
+    query_params = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetQueryParameters(
+        filter=f"appId eq '{client_id}'"
+    )
+    request_config = ServicePrincipalsRequestBuilder.ServicePrincipalsRequestBuilderGetRequestConfiguration(
+        query_parameters=query_params
+    )
+    sps = await graph_client.service_principals.get(request_configuration=request_config)
+    if sps and sps.value:
+        sp = sps.value[0]
+        print(f"Production service principal already exists: {sp.id}")
+    else:
+        sp = await graph_client.service_principals.post(
+            ServicePrincipal(app_id=client_id, display_name="MCP Expense Server App")
+        )
+        if sp is None or sp.id is None:
+            raise ValueError("Failed to create production service principal")
+        print(f"Created production service principal: {sp.id}")
+
+    # Check if admin consent already granted
+    from msgraph.generated.oauth2_permission_grants.oauth2_permission_grants_request_builder import (
+        Oauth2PermissionGrantsRequestBuilder,
+    )
+
+    grant_params = (
+        Oauth2PermissionGrantsRequestBuilder.Oauth2PermissionGrantsRequestBuilderGetQueryParameters(
+            filter=f"clientId eq '{sp.id}'"
+        )
+    )
+    grant_config = (
+        Oauth2PermissionGrantsRequestBuilder.Oauth2PermissionGrantsRequestBuilderGetRequestConfiguration(
+            query_parameters=grant_params
+        )
+    )
+    existing_grants = await graph_client.oauth2_permission_grants.get(request_configuration=grant_config)
+    if existing_grants and existing_grants.value:
+        print("Admin consent already granted for production app.")
+        return
+
+    # Find the Graph API service principal
+    graph_app_id = "00000003-0000-0000-c000-000000000000"
+    graph_sp = await graph_client.service_principals_with_app_id(graph_app_id).get()
+    if graph_sp is None or graph_sp.id is None:
+        raise ValueError("Failed to find Graph API service principal")
+
+    print("Granting admin consent for Graph API scopes (OBO flow) on production app...")
+    await graph_client.oauth2_permission_grants.post(
+        OAuth2PermissionGrant(
+            client_id=sp.id,
+            consent_type="AllPrincipals",
+            resource_id=graph_sp.id,
+            scope="User.Read email offline_access openid profile",
+        )
+    )
+    print("Admin consent granted for production app.")
+
+
 async def main():
     load_azd_env(override=True)
     auth_tenant = os.environ["AZURE_TENANT_ID"]
 
-    # Skip if local dev app already configured
+    credential = AzureDeveloperCliCredential(tenant_id=auth_tenant)
+    graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
+
+    # Always run production app fixups after Bicep provision
+    await update_production_app(graph_client)
+
+    # Skip local dev app creation if already configured
     if os.getenv("ENTRA_PROXY_AZURE_CLIENT_ID") and os.getenv("ENTRA_PROXY_AZURE_CLIENT_SECRET"):
         print(f"Local dev app already configured: {os.environ['ENTRA_PROXY_AZURE_CLIENT_ID']}")
         return
-
-    credential = AzureDeveloperCliCredential(tenant_id=auth_tenant)
-    graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
 
     object_id, client_id = await create_app_registration(graph_client)
     update_azd_env("ENTRA_PROXY_AZURE_CLIENT_ID", client_id)
