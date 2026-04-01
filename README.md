@@ -9,10 +9,8 @@ A Python MCP server that authenticates users via Microsoft Entra ID and stores p
   - [VS Code Dev Containers](#vs-code-dev-containers)
   - [Local environment](#local-environment)
 - [Deploy to Azure](#deploy-to-azure)
-- [Run and test locally](#run-and-test-locally)
-- [Use with GitHub Copilot](#use-with-github-copilot)
-- [Deploy with private networking](#deploy-with-private-networking)
-- [Viewing traces](#viewing-traces)
+- [Run the MCP server locally](#run-the-mcp-server-locally)
+- [Use MCP server with GitHub Copilot](#use-mcp-server-with-github-copilot)
 - [Resources](#resources)
 
 ## Getting started
@@ -100,7 +98,13 @@ This project can be deployed to Azure Container Apps using the Azure Developer C
 
    This will create a folder inside `.azure` with the name of your environment.
 
-3. Provision and deploy the resources:
+3. (Optional) Set the Entra admin group ID. This is used to restrict admin-only MCP tools to members of a specific Microsoft Entra ID security group. If not specified, the admin-only tools will not be available. You can find the group's Object ID in the [Azure Portal under Microsoft Entra ID > Groups](https://portal.azure.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade/~/AllGroups).
+
+   ```bash
+   azd env set ENTRA_ADMIN_GROUP_ID <your-group-object-id>
+   ```
+
+4. Provision and deploy the resources:
 
    ```bash
    azd up
@@ -108,7 +112,7 @@ This project can be deployed to Azure Container Apps using the Azure Developer C
 
    It will prompt you to select a subscription and location. This will take several minutes to complete.
 
-4. Once deployment is complete, a `.env` file will be created with the necessary environment variables to run the server locally against the deployed resources.
+5. Once deployment is complete, a `.env` file will be created with the necessary environment variables to run the server locally against the deployed resources.
 
 ### Costs
 
@@ -122,69 +126,73 @@ You can try the [Azure pricing calculator](https://azure.com/e/3987c81282c84410b
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use, either by deleting the resource group in the Portal or running `azd down`.
 
-### Use deployed MCP server with GitHub Copilot
+## Run the MCP server locally
 
-See [Use with GitHub Copilot](#use-with-github-copilot) below.
+For easier development and debugging, you can run the MCP server locally while still using the Azure resources provisioned by the deployment (Cosmos DB, Application Insights, Entra App Registration).
 
-### Running the server locally
-
-After deployment sets up the required Azure resources (Cosmos DB, Application Insights) and Entra App Registration, you can run the MCP server locally against those resources:
+After [deploying to Azure](#deploy-to-azure), the `.env` file should be populated with the necessary environment variables to connect to those resources. With that setup, you can run the MCP server locally against those resources:
 
 ```bash
 cd servers && uv run uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-## Use with GitHub Copilot
+## Use MCP server with GitHub Copilot
 
-The Entra App Registration includes redirect URIs for VS Code:
+To use the MCP server with GitHub Copilot Chat in VS Code:
 
-- `https://vscode.dev/redirect` (VS Code web)
-- `http://127.0.0.1:{33418-33427}` (VS Code desktop local auth helper, 10 ports)
+1. Open `.vscode/mcp.json`. You should see two entries, one for the local server and one for the deployed server. To use the deployed server, replace `https://YOUR_MCP_SERVER.azurecontainerapps.io/mcp` with the URL of your deployed MCP server (from the `.env` file).
 
-To use the MCP server with GitHub Copilot Chat:
+   ```json
+   {
+    "servers": {
+     "expenses-mcp-local": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
+     },
+     "expenses-mcp-deployed": {
+      "type": "http",
+      "url": "https://YOUR_MCP_SERVER.azurecontainerapps.io/mcp"
+     }
+    }
+   }
+   ```
 
-1. Select "MCP: Add Server" from the VS Code Command Palette
-2. Select "HTTP" as the server type
-3. Enter the URL of the MCP server, either from `MCP_SERVER_URL` environment variable (for the deployed server) or `http://localhost:8000/mcp` if running locally.
-4. If you get an error about "Client ID not found", open the Command Palette, run **"Authentication: Remove Dynamic Authentication Providers"**, and select the MCP server URL. This clears any cached OAuth tokens and forces a fresh authentication flow. Then restart the server to prompt the OAuth flow again.
-5. You should see a FastMCP authentication screen open in your browser. Select "Allow access":
+1. Over the server that you want to use (local or deployed), select "Start" from the CodeLens options.
 
-   ![FastMCP authentication screen](readme_appaccess.png)
+   ![Start MCP server from CodeLens](readme_copilot_start.png)
 
-6. After granting access, the browser will redirect to a VS Code "Sign-in successful!" page and then bring focus back to VS Code.
+1. You should see a dialog prompting you to authenticate with Microsoft.
 
-   ![VS Code sign-in successful page](readme_signedin.png)
+   ![VS Code authentication prompt](readme_copilot_auth.png)
 
-7. Enable the MCP server in GitHub Copilot Chat tools and test it with an expense tracking query:
+   If you get an error that the server does not support DCR, that usually means the server failed to deploy correctly. Check the server logs for errors.
+
+1. After successful authentication, you should see "200" responses in the server logs in the Terminal, if you are running the server locally, or in the Azure Container Apps logs if you are using the deployed server.
+
+   ![MCP server logs showing successful authentication](readme_copilot_logs.png)
+
+1. Open the "Configure tools" dialog from GitHub Copilot Chat, and ensure that you have enabled the target MCP server (either local or deployed).
+
+   ![Enable MCP server in GitHub Copilot Chat tools](readme_copilot_enable.png)
+
+1. Test the MCP server by sending an expense tracking query through GitHub Copilot Chat:
 
    ```text
    Log expense for 75 dollars of office supplies on my visa last Friday
    ```
 
-   ![Example GitHub Copilot Chat Input](readme_authquery.png)
-
-8. Verify the expense was added by checking the Cosmos DB `user-expenses` container in the Azure Portal.
+1. Verify the expense was added by checking the Cosmos DB `user-expenses` container in either the Azure Portal or Azure Cosmos DB extension in VS Code. You should see a new document with the expense details.
 
    ![Cosmos DB user-expenses container](readme_userexpenses.png)
 
-### Viewing traces in Azure Application Insights
+1. If you ever need to "log out" of the MCP server, select "More" from the CodeLens options and then "Disconnect account".
 
-By default, OpenTelemetry tracing is enabled for the deployed MCP server, sending traces to Azure Application Insights. To bring up a dashboard of metrics and traces, run:
-
-```shell
-azd monitor
-```
-
-Or you can use Application Insights directly:
-
-1. Open the Azure Portal and navigate to the Application Insights resource created during deployment (named `<project-name>-appinsights`).
-2. In Application Insights, go to "Transaction Search" to view traces from the MCP server.
-3. You can filter and analyze traces to monitor performance and diagnose issues.
+   ![Disconnect account from CodeLens](readme_copilot_disconnect.png)
 
 ---
 
 ## Resources
 
-* [Video series: Python + MCP (December 2025)](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402)
-* [MCP for beginners: Online tutorial](https://github.com/microsoft/mcp-for-beginners)
-* [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python)
+- [Video series: Python + MCP (December 2025)](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402)
+- [MCP for beginners: Online tutorial](https://github.com/microsoft/mcp-for-beginners)
+- [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python)
