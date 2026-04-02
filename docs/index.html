@@ -63,22 +63,49 @@
 			background: none;
 		}
 
-		/* Section heading slides: dark navy cosmos background, centered */
+        /* Section heading slides: bright blue gradient, fades on all edges */
 		.reveal section.heading-only {
 			display: flex !important;
 			flex-direction: column;
-			justify-content: center;
+			justify-content: flex-start;
 			align-items: center;
 			text-align: center;
 			height: 100%;
+			width: 100%;
+			max-width: none;
 			min-height: 720px;
-			background: linear-gradient(135deg, var(--cosmos-navy) 0%, var(--cosmos-dark) 50%, #162447 100%);
+			padding: 120px 72px 220px;
+			box-sizing: border-box;
+			background:
+				radial-gradient(ellipse at 30% 32%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 52%),
+				linear-gradient(135deg, #0e7dcd 0%, #2c8fe2 48%, #2e70c6 100%);
+			-webkit-mask-image:
+				linear-gradient(to right,  rgba(0,0,0,0) 0%, rgba(0,0,0,1) 1.5%, rgba(0,0,0,1) 98.5%, rgba(0,0,0,0) 100%),
+				linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,0.96) 72%, rgba(0,0,0,0.88) 76%, rgba(0,0,0,0.78) 80%, rgba(0,0,0,0.64) 84%, rgba(0,0,0,0.48) 88%, rgba(0,0,0,0.32) 91%, rgba(0,0,0,0.18) 94%, rgba(0,0,0,0.08) 97%, rgba(0,0,0,0) 100%);
+			-webkit-mask-composite: destination-in;
+			mask-image:
+				linear-gradient(to right,  rgba(0,0,0,0) 0%, rgba(0,0,0,1) 1.5%, rgba(0,0,0,1) 98.5%, rgba(0,0,0,0) 100%),
+				linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,0.96) 72%, rgba(0,0,0,0.88) 76%, rgba(0,0,0,0.78) 80%, rgba(0,0,0,0.64) 84%, rgba(0,0,0,0.48) 88%, rgba(0,0,0,0.32) 91%, rgba(0,0,0,0.18) 94%, rgba(0,0,0,0.08) 97%, rgba(0,0,0,0) 100%);
+			mask-composite: intersect;
 			border-radius: 0;
 		}
 		.reveal section.heading-only h1,
 		.reveal section.heading-only h2,
 		.reveal section.heading-only h3 {
 			color: #fff;
+			position: relative;
+			padding-bottom: 20px;
+		}
+		.reveal section.heading-only h1::after,
+		.reveal section.heading-only h2::after,
+		.reveal section.heading-only h3::after {
+			content: "";
+			display: block;
+			width: 80px;
+			height: 6px;
+			border-radius: 999px;
+			margin: 18px auto 0;
+			background: linear-gradient(90deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.25) 100%);
 		}
 		.reveal section.heading-only p {
 			color: rgba(255, 255, 255, 0.85);
@@ -103,6 +130,188 @@
         }
         .reveal section.demo-slide p {
             color: rgba(255, 255, 255, 0.9);
+        }
+        .reveal section.demo-slide a,
+        .reveal section.demo-slide a:hover,
+        .reveal section.demo-slide a:visited {
+            color: rgba(255, 255, 255, 0.96) !important;
+            text-decoration-color: rgba(255, 255, 255, 0.96) !important;
+        }
+        .reveal section.demo-slide a strong {
+            color: rgba(255, 255, 255, 0.96) !important;
+        }
+
+        .reveal section.demo-slide.demo-window {
+            background:
+                radial-gradient(circle at top left, rgba(0, 120, 212, 0.16) 0%, rgba(0, 120, 212, 0) 28%),
+                radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.14) 0%, rgba(15, 118, 110, 0) 26%),
+                #edf4fc;
+        }
+        .reveal section.demo-slide.demo-window .demo-window-shell {
+            width: min(860px, 88%);
+            background: #ffffff;
+            border: 1px solid #cfe0f2;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 22px 60px rgba(24, 56, 98, 0.16);
+            text-align: left;
+        }
+        .reveal section.demo-slide.demo-window .demo-window-chrome {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 52px;
+            padding: 0 18px;
+            background: linear-gradient(135deg, #e8f0fb 0%, #dbe8f8 100%);
+            border-bottom: 1px solid #d2e0f0;
+        }
+        .reveal section.demo-slide.demo-window .demo-window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .reveal section.demo-slide.demo-window .demo-window-dot.red { background: #ff7a59; }
+        .reveal section.demo-slide.demo-window .demo-window-dot.yellow { background: #f5c044; }
+        .reveal section.demo-slide.demo-window .demo-window-dot.green { background: #58bf6b; }
+        .reveal section.demo-slide.demo-window .demo-window-tab {
+            margin-left: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            color: #34567f;
+            font-size: 0.44em;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .reveal section.demo-slide.demo-window .demo-window-body {
+            padding: 40px 44px 44px;
+            background: linear-gradient(180deg, #ffffff 0%, #f6faff 100%);
+        }
+
+        .reveal section.demo-slide.demo-rail {
+            background:
+                linear-gradient(90deg, #0a1929 0 118px, transparent 118px),
+                linear-gradient(135deg, #edf4fc 0%, #e6f1fb 100%);
+        }
+        .reveal section.demo-slide.demo-rail .demo-rail-mark {
+            position: absolute;
+            left: 22px;
+            top: 210px;
+            color: rgba(255, 255, 255, 0.92);
+            font-family: 'Outfit', system-ui, sans-serif;
+            font-size: 1.05em;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+        .reveal section.demo-slide.demo-rail .demo-rail-content {
+            max-width: 760px;
+            margin: 210px 0 0 170px;
+            text-align: left;
+        }
+        .reveal section.demo-slide.demo-rail .demo-rail-rule {
+            width: 92px;
+            height: 6px;
+            border-radius: 999px;
+            margin: 0 0 22px 0;
+            background: linear-gradient(90deg, #0e7dcd 0%, #0f766e 100%);
+        }
+
+        .reveal section.demo-slide.demo-card {
+            background: #edf4fc;
+        }
+        .reveal section.demo-slide.demo-card::before {
+            content: "";
+            position: absolute;
+            inset: 72px 88px;
+            border-radius: 44px;
+            background:
+                radial-gradient(circle at 82% 18%, rgba(14, 125, 205, 0.14) 0%, rgba(14, 125, 205, 0) 30%),
+                radial-gradient(circle at 12% 86%, rgba(15, 118, 110, 0.12) 0%, rgba(15, 118, 110, 0) 28%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(210, 233, 253, 0.5) 100%);
+            filter: blur(1px);
+            z-index: 0;
+        }
+        .reveal section.demo-slide.demo-card .demo-card-shell {
+            position: relative;
+            z-index: 1;
+            width: min(920px, 90%);
+            padding: 38px 42px 42px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(180, 204, 229, 0.9);
+            box-shadow: 0 16px 44px rgba(15, 42, 75, 0.12);
+            text-align: left;
+            backdrop-filter: blur(8px);
+        }
+        .reveal section.demo-slide.demo-card .demo-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .reveal section.demo-slide.demo-card .demo-badge {
+            display: inline-block;
+            padding: 14px 26px;
+            border-radius: 999px;
+            background: #0d3f73;
+            color: #ffffff;
+            font-family: 'Outfit', system-ui, sans-serif;
+            font-size: 0.72em;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        .reveal section.demo-slide.demo-card .demo-card-accent {
+            width: 156px;
+            height: 10px;
+            border-radius: 999px;
+            margin-bottom: 22px;
+            background: linear-gradient(90deg, #0078d4 0%, #56b0ff 55%, #0f766e 100%);
+        }
+
+        .reveal section.demo-slide.demo-window h2,
+        .reveal section.demo-slide.demo-rail h2,
+        .reveal section.demo-slide.demo-card h2 {
+            color: #0d3f73;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .reveal section.demo-slide.demo-window p,
+        .reveal section.demo-slide.demo-rail p,
+        .reveal section.demo-slide.demo-card p {
+            color: #365070;
+        }
+        .reveal section.demo-slide.demo-window a,
+        .reveal section.demo-slide.demo-window a:hover,
+        .reveal section.demo-slide.demo-window a:visited,
+        .reveal section.demo-slide.demo-rail a,
+        .reveal section.demo-slide.demo-rail a:hover,
+        .reveal section.demo-slide.demo-rail a:visited,
+        .reveal section.demo-slide.demo-card a,
+        .reveal section.demo-slide.demo-card a:hover,
+        .reveal section.demo-slide.demo-card a:visited {
+            color: var(--cosmos-blue) !important;
+            text-decoration-color: var(--cosmos-blue) !important;
+        }
+        .reveal section.demo-slide.demo-window a strong,
+        .reveal section.demo-slide.demo-rail a strong,
+        .reveal section.demo-slide.demo-card a strong {
+            color: var(--cosmos-accent) !important;
+        }
+        .reveal section.demo-slide .demo-kicker {
+            margin: 0 0 12px 0;
+            color: #0e7dcd;
+            font-family: 'Outfit', system-ui, sans-serif;
+            font-size: 0.48em;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
 
 		/* Blockquote: blue border, light card */
@@ -199,9 +408,15 @@
 <!-- ==========================================
      OPENING DEMO
      ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: The finished server</h2>
-    <p>Authenticated expense tracking MCP server<br>with per-user data in Cosmos DB</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>The finished server</h2>
+        <p>Authenticated expense tracking MCP server<br>with per-user data in Cosmos DB</p>
+    </div>
     <aside class="notes">
         Start with the final server running in VS Code, already logged in. Show adding an expense, querying expenses, and how each user only sees their own data. Demo the admin-only stats tool.
     </aside>
@@ -468,7 +683,7 @@
 </section>
 
 <section>
-    <h3>Server architecture</h3>
+    <h3>MCP server architecture</h3>
     <svg viewBox="0 0 1100 620" style="width: 100%; margin: 6px auto 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <linearGradient id="serverCardGrad" x1="0" y1="0" x2="1" y2="1">
@@ -542,88 +757,280 @@
      SECTION: MCP AUTHENTICATION
      ========================================== -->
 <section class="heading-only">
-    <h2>MCP authentication options</h2>
+    <h2>MCP authentication</h2>
 </section>
 
 <section>
-    <h3>Three ways to restrict MCP server access</h3>
-    <table style="font-size: 0.75em;">
-        <thead>
-            <tr><th>Approach</th><th>How it works</th><th>Best for</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Private network</strong></td>
-                <td>Deploy inside a VNet, disable public ingress</td>
-                <td>Internal-only servers</td>
-            </tr>
-            <tr>
-                <td><strong>Key-based access</strong></td>
-                <td>API key in HTTP headers</td>
-                <td>Simple server-to-server, public APIs</td>
-            </tr>
-            <tr>
-                <td><strong>OAuth-based access</strong></td>
-                <td>User authenticates via OAuth 2.1, gets a Bearer token</td>
-                <td>Per-user data, identity-aware servers</td>
-            </tr>
-        </tbody>
-    </table>
-    <p class="fragment">For <strong>identity-aware</strong> servers where data is per-user,<br>OAuth is the right choice.</p>
+    <h3>OAuth-based access flow</h3>
+    <p style="font-size: 0.82em; margin-bottom: 6px;">An MCP client can make requests to an MCP server on behalf of a signed-in user.</p>
+    <svg viewBox="0 0 1100 620" style="width: 100%; max-width: 1100px; height: auto;">
+        <defs>
+            <linearGradient id="oauthFlowCard" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="100%" stop-color="#eef6ff"/>
+            </linearGradient>
+            <marker id="oauthFlowArrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,7 L7,3.5 z" fill="#173a63"/>
+            </marker>
+        </defs>
+
+        <rect x="46" y="92" width="246" height="438" rx="26" fill="#355fb8"/>
+        <text x="169" y="320" text-anchor="middle" font-family="Outfit, sans-serif" font-size="34" font-weight="700" fill="#ffffff">MCP Client</text>
+
+        <rect x="788" y="92" width="278" height="438" rx="26" fill="url(#oauthFlowCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="927" y="230" text-anchor="middle" font-family="Outfit, sans-serif" font-size="34" font-weight="700" fill="#111111">MCP Server</text>
+        <text x="927" y="320" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#1f1f1f">Verifies the access token</text>
+        <text x="927" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#1f1f1f">and returns results scoped</text>
+        <text x="927" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#1f1f1f">to that signed-in user.</text>
+
+        <line x1="292" y1="146" x2="788" y2="146" stroke="#173a63" stroke-width="5" marker-end="url(#oauthFlowArrow)"/>
+        <g transform="translate(540 146)">
+            <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#ffffff" stroke="#147ad6" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#147ad6">MCP</text>
+        </g>
+
+        <rect x="346" y="188" width="430" height="40" rx="12" fill="#f5f7fb" stroke="#dbe6f5" stroke-width="2"/>
+        <text x="364" y="215" font-family="SFMono-Regular, Consolas, monospace" font-size="16" fill="#111111">Authorization: Bearer &lt;access token&gt;</text>
+
+        <rect x="346" y="238" width="430" height="206" rx="18" fill="#f5f7fb" stroke="#dbe6f5" stroke-width="2"/>
+        <text x="364" y="266" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">{</text>
+        <text x="382" y="290" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">"jsonrpc": "2.0",</text>
+        <text x="382" y="314" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">"method": "tools/call",</text>
+        <text x="382" y="338" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">"params": {</text>
+        <text x="404" y="362" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">"name": "get_expenses",</text>
+        <text x="404" y="386" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">"user_id": "abc123"</text>
+        <text x="382" y="410" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">}</text>
+        <text x="364" y="434" font-family="SFMono-Regular, Consolas, monospace" font-size="12" fill="#2b2b2b">}</text>
+
+        <line x1="788" y1="500" x2="292" y2="500" stroke="#173a63" stroke-width="5" marker-end="url(#oauthFlowArrow)"/>
+        <g transform="translate(540 500)">
+            <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#ffffff" stroke="#147ad6" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#147ad6">MCP</text>
+        </g>
+
+        <rect x="388" y="534" width="362" height="72" rx="18" fill="#f5f7fb" stroke="#dbe6f5" stroke-width="2"/>
+        <text x="406" y="560" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">{</text>
+        <text x="424" y="582" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"jsonrpc": "2.0", "result": {</text>
+        <text x="424" y="602" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"content": [{ "amount": 200 }, ...] } }</text>
+    </svg>
     <aside class="notes">
-        Covered in session 3.  Private network was session 2, key-based and OAuth were session 3. For this demo, we need OAuth because we need to know WHO the user is to store and retrieve their personal data.
+        This is the high-level access pattern for OAuth-protected MCP over HTTP. The client sends a normal MCP request, but includes a bearer token for the signed-in user. The server validates that token and returns user-scoped results. We'll use the next slides to explain how the client gets recognized and how the auth flow is wired up.
     </aside>
 </section>
 
 <section>
-    <h3>OAuth 2.1 flow for MCP</h3>
-    <ol style="font-size: 0.75em; line-height: 1.8;">
-        <li>MCP client sends request to server → <strong>401 Unauthorized</strong></li>
-        <li>Client discovers auth server via <strong>Protected Resource Metadata (PRM)</strong></li>
-        <li>Client redirects user to authorization server (Entra login)</li>
-        <li>User authenticates and consents</li>
-        <li>Authorization server issues <strong>access token</strong></li>
-        <li>Client sends requests with <code>Authorization: Bearer &lt;token&gt;</code></li>
-        <li>Server validates JWT and extracts user identity</li>
-    </ol>
-    <p style="font-size: 0.8em;"><a target="_blank" href="https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization">MCP auth specification</a></p>
+    <h3>OAuth 2.1 overview</h3>
+    <p style="font-size: 0.82em; margin-bottom: 8px;">MCP authentication builds on the standard OAuth 2.1 roles and token flow.</p>
+    <svg viewBox="0 0 1100 560" style="width: 100%; max-width: 1100px; height: auto;">
+        <defs>
+            <linearGradient id="oauthRoleCard" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="100%" stop-color="#eef6ff"/>
+            </linearGradient>
+        </defs>
+
+        <line x1="240" y1="286" x2="948" y2="286" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
+        <line x1="550" y1="174" x2="550" y2="426" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
+
+        <rect x="46" y="232" width="246" height="108" rx="22" fill="url(#oauthRoleCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <rect x="792" y="232" width="270" height="108" rx="22" fill="url(#oauthRoleCard)" stroke="#d99a34" stroke-width="2.5"/>
+        <rect x="410" y="78" width="280" height="92" rx="22" fill="url(#oauthRoleCard)" stroke="#9ecf55" stroke-width="2.5"/>
+        <rect x="420" y="428" width="260" height="112" rx="22" fill="url(#oauthRoleCard)" stroke="#b26bb5" stroke-width="2.5"/>
+        <rect x="584" y="236" width="160" height="82" rx="18" fill="#fff7df" stroke="#f0c85d" stroke-width="2.5"/>
+
+        <circle cx="550" cy="58" r="22" fill="#e8f6d8" stroke="#7ac143" stroke-width="2.5"/>
+        <path d="M539 57 l8 8 l14 -16" fill="none" stroke="#7ac143" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="550" y="116" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#6aa33c">Authorization server (AS)</text>
+        <text x="550" y="146" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#6aa33c">login + consent</text>
+
+        <rect x="72" y="250" width="34" height="34" rx="7" fill="none" stroke="#3a73ae" stroke-width="5"/>
+        <text x="180" y="272" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#3a73ae">OAuth 2.1 client</text>
+        <text x="180" y="308" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#173a63">MCP client</text>
+
+        <rect x="1012" y="246" width="34" height="50" rx="9" fill="#d99a34"/>
+        <rect x="1020" y="255" width="18" height="5" rx="2.5" fill="#ffffff"/>
+        <rect x="1020" y="272" width="18" height="5" rx="2.5" fill="#ffffff"/>
+        <rect x="1020" y="289" width="18" height="5" rx="2.5" fill="#ffffff"/>
+        <text x="923" y="270" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#cf8c24">OAuth 2.1 resource server</text>
+        <text x="927" y="308" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#cf8c24">MCP server</text>
+
+        <path d="M602 248 l14 10 l-5 18 h-18 l-5 -18 z" fill="#111111" stroke="#7a2c84" stroke-width="2"/>
+        <text x="676" y="272" text-anchor="middle" font-family="Outfit, sans-serif" font-size="18" font-weight="700" fill="#111111">Access token</text>
+        <text x="676" y="296" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#555555">issued by the AS</text>
+
+        <text x="550" y="470" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#7a3f84">Resource owner</text>
+        <text x="550" y="500" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#7a3f84">the signed-in user</text>
+        <circle cx="550" cy="522" r="18" fill="#982c9a"/>
+        <rect x="521" y="544" width="58" height="22" rx="11" fill="#982c9a"/>
+    </svg>
     <aside class="notes">
-        The key flow: client hits the server, gets a 401, discovers the auth server through PRM, authenticates with Entra, gets a token, and then sends authenticated requests. The server never needs to proxy OAuth — it just validates JWTs.
+        MCP auth is built on top of OAuth 2.1, which involves four entities:
+
+        Authorization server, or AS. For example, Microsoft Entra. It manages users and determines who is allowed access.
+
+        OAuth 2.1 client, or MCP client. The application requesting access on behalf of the user, like VS Code, Claude Desktop, or a programmatic agent.
+
+        OAuth 2.1 resource server, or MCP server. The server that has the resources the user wants to access.
+
+        Resource owner. The user who owns the data and authorizes the client to access it.
     </aside>
 </section>
 
 <section>
-    <h3>Our approach: RemoteAuthProvider</h3>
-    <p>The server just validates JWTs — no OAuth proxy needed.</p>
-    <ul style="font-size: 0.8em;">
-        <li>Server serves <strong>PRM endpoint</strong> pointing client directly to Entra</li>
-        <li>VS Code authenticates <strong>directly with Entra</strong> (pre-registered client)</li>
-        <li>Server validates tokens using Entra's <strong>public signing keys</strong></li>
-        <li>No client secret needed on the server for auth</li>
-    </ul>
-    <div class="fragment" style="margin-top: 16px;">
-        <p style="font-size: 0.75em;">Server logs show the simplicity — no <code>/authorize</code>, <code>/token</code>, or <code>/consent</code> endpoints:</p>
-        <pre style="font-size: 0.5em;"><code data-trim>
-POST /mcp HTTP/1.1  → 401 Unauthorized
-GET  /.well-known/oauth-protected-resource/mcp  → 200 OK
-POST /mcp HTTP/1.1  → 200 OK  (with Bearer token)
-        </code></pre>
-    </div>
+    <h3>Choosing a client registration path</h3>
+    <svg viewBox="0 0 1100 590" style="width: 100%; max-width: 1100px; height: auto; margin-top: 8px;">
+        <defs>
+            <linearGradient id="authPathCard" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="100%" stop-color="#eef6ff"/>
+            </linearGradient>
+            <marker id="authPathArrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,7 L7,3.5 z" fill="#173a63"/>
+            </marker>
+        </defs>
+
+        <rect x="155" y="18" width="790" height="88" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="550" y="71" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" fill="#1f1f1f">
+            <tspan>Does the </tspan>
+            <tspan fill="#6aa33c" font-weight="700">auth server</tspan>
+            <tspan> already know the </tspan>
+            <tspan fill="#147ad6" font-weight="700">client?</tspan>
+        </text>
+
+        <line x1="550" y1="106" x2="227" y2="202" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="550" y1="106" x2="725" y2="202" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+
+        <g transform="translate(390 160)">
+            <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#e8f6d8" stroke="#7ac143" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#468a1e">Yes</text>
+        </g>
+        <g transform="translate(640 156)">
+            <rect x="-30" y="-18" width="60" height="34" rx="17" fill="#fff0ea" stroke="#ef6a32" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#d9581f">No</text>
+        </g>
+
+        <rect x="82" y="202" width="290" height="100" rx="22" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="227" y="252" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">Pre-registration</text>
+        <text x="227" y="284" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#2d2d2d">existing relationship</text>
+
+        <rect x="430" y="202" width="590" height="100" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="725" y="260" text-anchor="middle" font-family="Inter, sans-serif" font-size="25" fill="#1f1f1f">
+            <tspan>If not, do both sides support </tspan>
+            <tspan fill="#147ad6" font-weight="700">CIMD?</tspan>
+        </text>
+
+        <line x1="725" y1="302" x2="542" y2="410" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="725" y1="302" x2="900" y2="410" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+
+        <g transform="translate(634 360)">
+            <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#e8f6d8" stroke="#7ac143" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#468a1e">Yes</text>
+        </g>
+        <g transform="translate(812 356)">
+            <rect x="-30" y="-18" width="60" height="34" rx="17" fill="#fff0ea" stroke="#ef6a32" stroke-width="2"/>
+            <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#d9581f">No</text>
+        </g>
+
+        <rect x="360" y="410" width="365" height="142" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="542" y="460" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">CIMD</text>
+        <text x="542" y="494" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Client ID Metadata Document</text>
+        <text x="542" y="522" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(default MCP path)</text>
+
+        <rect x="760" y="410" width="280" height="142" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="900" y="460" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">DCR</text>
+        <text x="900" y="492" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Dynamic Client</text>
+        <text x="900" y="518" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Registration</text>
+        <text x="900" y="542" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(legacy fallback)</text>
+    </svg>
+    <p style="font-size: 0.72em; margin-top: 10px;"><strong>For this demo:</strong> Microsoft Entra does <strong>not</strong> support <strong>CIMD</strong> or <strong>DCR</strong>, so we use VS Code's known client ID for <strong>pre-registration</strong>.</p>
+    <p style="font-size: 0.62em; margin-top: 4px;"><strong>Alternative:</strong> put a DCR-capable auth proxy in front of Entra.</p>
     <aside class="notes">
-        This is Option 3 from the plan. VS Code is pre-registered as an authorized application on our Entra app registration. When the PRM points to Entra, VS Code uses its own first-party Entra GUID and authenticates via the macOS/Windows authentication broker. The server just validates the resulting JWT.
+        This tree matches the MCP auth spec's preferred decision order. If the auth server already knows the client, use pre-registration. If not, the modern MCP path is CIMD, where the client identifies itself with a hosted metadata document. If CIMD is unavailable, DCR is the legacy fallback. For this demo, Microsoft Entra does not support CIMD or DCR, so we rely on VS Code's known client ID for pre-registration. Another option would be to place a DCR-capable auth proxy in front of Entra.
     </aside>
 </section>
 
-<!-- ==========================================
-     CODE WALKTHROUGH: FastMCP + OAuth
-     ========================================== -->
-<section class="heading-only">
-    <h2>Code: FastMCP server<br>with OAuth authentication</h2>
+<section>
+    <h3>Pre-registered OAuth flow for MCP</h3>
+    <svg viewBox="0 0 1100 620" style="width: 100%; max-width: 1100px; height: auto; margin-top: 4px;">
+        <defs>
+        </defs>
+
+        <text x="86" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#7a3f84">User</text>
+        <text x="376" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#3a73ae">MCP client</text>
+        <text x="710" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#6aa33c">Authorization server (AS)</text>
+        <text x="1030" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#cf8c24">MCP server</text>
+
+        <circle cx="86" cy="26" r="10" fill="#9a2f9d"/>
+        <rect x="72" y="42" width="28" height="14" rx="7" fill="#9a2f9d"/>
+        <rect x="360" y="14" width="32" height="22" rx="4" fill="none" stroke="#3a73ae" stroke-width="4"/>
+        <line x1="376" y1="38" x2="376" y2="44" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="366" y1="46" x2="386" y2="46" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="370" y1="24" x2="382" y2="24" stroke="#3a73ae" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+        <circle cx="710" cy="31" r="20" fill="#e8f6d8" stroke="#7ac143" stroke-width="2.5"/>
+        <path d="M699 30 l8 8 l14 -16" fill="none" stroke="#7ac143" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="1016" y="14" width="30" height="42" rx="8" fill="#d99a34"/>
+        <rect x="1022" y="22" width="18" height="4" rx="2" fill="#ffffff"/>
+        <rect x="1022" y="32" width="18" height="4" rx="2" fill="#ffffff"/>
+        <rect x="1022" y="42" width="18" height="4" rx="2" fill="#ffffff"/>
+
+        <line x1="86" y1="98" x2="86" y2="604" stroke="#e8cde9" stroke-width="16" stroke-linecap="round"/>
+        <line x1="376" y1="98" x2="376" y2="604" stroke="#d4e3f4" stroke-width="16" stroke-linecap="round"/>
+        <line x1="710" y1="98" x2="710" y2="604" stroke="#dff0bf" stroke-width="16" stroke-linecap="round"/>
+        <line x1="1030" y1="98" x2="1030" y2="604" stroke="#f7e7c6" stroke-width="16" stroke-linecap="round"/>
+
+        <line x1="94" y1="146" x2="349" y2="146" stroke="#9a2f9d" stroke-width="4"/>
+        <polygon points="349,136 349,156 368,146" fill="#9a2f9d"/>
+        <text x="226" y="132" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#9a2f9d">asks to use an MCP tool</text>
+
+        <line x1="384" y1="198" x2="1003" y2="198" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="1003,188 1003,208 1022,198" fill="#3a73ae"/>
+        <text x="710" y="188" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#3a73ae">MCP request without token</text>
+
+        <line x1="1022" y1="250" x2="403" y2="250" stroke="#d99a34" stroke-width="4"/>
+        <polygon points="403,240 403,260 384,250" fill="#d99a34"/>
+        <text x="710" y="240" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#d99a34">401 + PRM metadata</text>
+
+        <line x1="384" y1="302" x2="683" y2="302" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="683,292 683,312 702,302" fill="#3a73ae"/>
+        <text x="544" y="292" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#3a73ae">redirects to Entra with known client ID</text>
+
+        <line x1="94" y1="354" x2="683" y2="354" stroke="#9a2f9d" stroke-width="4"/>
+        <polygon points="683,344 683,364 702,354" fill="#9a2f9d"/>
+        <text x="370" y="344" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#9a2f9d">signs in</text>
+
+        <line x1="702" y1="406" x2="403" y2="406" stroke="#7aa93c" stroke-width="4"/>
+        <polygon points="403,396 403,416 384,406" fill="#7aa93c"/>
+        <text x="544" y="396" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#7aa93c">returns authorization code</text>
+
+        <line x1="384" y1="458" x2="683" y2="458" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="683,448 683,468 702,458" fill="#3a73ae"/>
+        <text x="544" y="448" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#3a73ae">exchanges code for token</text>
+
+        <line x1="702" y1="510" x2="403" y2="510" stroke="#7aa93c" stroke-width="4"/>
+        <polygon points="403,500 403,520 384,510" fill="#7aa93c"/>
+        <text x="544" y="500" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#7aa93c">returns access token</text>
+
+        <line x1="384" y1="562" x2="1003" y2="562" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="1003,552 1003,572 1022,562" fill="#3a73ae"/>
+        <text x="710" y="552" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#3a73ae">sends MCP request with bearer token</text>
+
+        <line x1="1022" y1="596" x2="403" y2="596" stroke="#d99a34" stroke-width="4"/>
+        <polygon points="403,586 403,606 384,596" fill="#d99a34"/>
+        <text x="710" y="586" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#d99a34">returns authenticated MCP results</text>
+
+        <rect x="736" y="274" width="236" height="48" rx="12" fill="#f7fbef" stroke="#9ecf55" stroke-dasharray="6 4"/>
+        <text x="854" y="294" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#6aa33c">pre-registered client is already</text>
+        <text x="854" y="312" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#6aa33c">known to the auth server</text>
+    </svg>
+    <aside class="notes">
+        This is the simplified pre-registration flow we actually use. The client first makes an MCP request and gets a 401 with protected resource metadata. That tells it to go to Entra. Because VS Code is already pre-registered, Entra already knows the client ID. In this setup, admin consent is already granted, so the user just signs in. The client gets an authorization code, exchanges it for a token, and then retries the MCP request with that bearer token.
+    </aside>
 </section>
 
 <section>
-    <h3>Setting up RemoteAuthProvider</h3>
-    <pre style="font-size: 0.55em;"><code data-trim data-noescape class="python">
+    <h3>Setting up OAuth with Entra in FastMCP</h3>
+    <p>FastMCP sends clients directly to Entra, then validates the returned JWTs with Entra's public signing keys.</p>
+    <pre style="font-size: 0.56em; margin-top: 20px; height: 430px; max-height: none;"><code data-trim data-noescape class="python" style="max-height: none; overflow: hidden;">
 from fastmcp import FastMCP
 from fastmcp.server.auth import RemoteAuthProvider
 from fastmcp.server.auth.providers.azure import AzureJWTVerifier
@@ -633,50 +1040,19 @@ verifier = AzureJWTVerifier(
     tenant_id=os.environ["AZURE_TENANT_ID"],
     required_scopes=["user_impersonation"],
 )
-
 auth = RemoteAuthProvider(
     token_verifier=verifier,
-    authorization_servers=[
-        f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}/v2.0"
-    ],
+    authorization_servers=[f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}/v2.0"],
     base_url=base_url,
 )
-
 mcp = FastMCP("Expenses Tracker", auth=auth)
     </code></pre>
     <aside class="notes">
-        AzureJWTVerifier validates Entra v2.0 tokens using the public signing keys. RemoteAuthProvider just serves the PRM endpoint, pointing clients directly to Entra. No proxy endpoints, no client secret for MCP auth. Same code works locally and in production.
+        This is Option 3 from the plan. VS Code is pre-registered as an authorized application on our Entra app registration. When the PRM points to Entra, VS Code uses its own first-party Entra GUID and authenticates via the macOS or Windows authentication broker. AzureJWTVerifier validates Entra v2.0 tokens using public signing keys, and RemoteAuthProvider only needs to serve the PRM metadata. The server just validates the resulting JWT.
     </aside>
 </section>
 
-<section>
-    <h3>Extracting user identity from the token</h3>
-    <pre style="font-size: 0.55em;"><code data-trim data-noescape class="python">
-from fastmcp.server.dependencies import get_access_token
-from fastmcp.server.middleware import Middleware, MiddlewareContext
-
-class UserAuthMiddleware(Middleware):
-    def _get_user_id(self):
-        token = get_access_token()
-        if not (token and hasattr(token, "claims")):
-            return None
-        return token.claims.get("oid")  # Entra Object ID
-
-    async def on_call_tool(self, context: MiddlewareContext, call_next):
-        user_id = self._get_user_id()
-        if context.fastmcp_context is not None:
-            await context.fastmcp_context.set_state("user_id", user_id)
-        return await call_next(context)
-
-mcp = FastMCP("Expenses Tracker", auth=auth,
-              middleware=[UserAuthMiddleware()])
-    </code></pre>
-    <aside class="notes">
-        Middleware extracts the user's Object ID (oid) from the JWT claims on every tool call. This OID uniquely identifies the user in Entra and becomes the key for storing their data in Cosmos DB. The state is passed through the FastMCP context so tools can access it.
-    </aside>
-</section>
-
-<section>
+<section data-visibility="hidden">
     <h3>Entra app registration (key parts)</h3>
     <pre style="font-size: 0.48em;"><code data-trim data-noescape class="bicep">
 resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
@@ -707,9 +1083,15 @@ resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
 <!-- ==========================================
      DEMO: AUTH FLOW IN VS CODE
      ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: Full auth flow</h2>
-    <p>Disconnect account, reconnect,<br>walk through the Entra login in VS Code</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Full auth flow</h2>
+        <p>Reconnect the server and walk through the 401, metadata discovery, Entra sign-in, and authenticated retry.</p>
+    </div>
     <aside class="notes">
         Disconnect the MCP server, then reconnect. Show the 401 → PRM discovery → Entra login → authenticated request flow. Show the server logs to confirm no proxy endpoints were hit.
     </aside>
@@ -719,21 +1101,7 @@ resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
      SECTION: COSMOS DB INTEGRATION
      ========================================== -->
 <section class="heading-only">
-    <h2>Integrating Cosmos DB<br>with MCP servers</h2>
-</section>
-
-<section>
-    <h3>Why Cosmos DB?</h3>
-    <ul>
-        <li><strong>Serverless or provisioned</strong> — scale to zero or handle millions of requests</li>
-        <li><strong>Low-latency reads and writes</strong> — single-digit millisecond response times</li>
-        <li><strong>Partition key design</strong> — natural per-user data isolation</li>
-        <li><strong>Identity-based access</strong> — managed identity, no connection strings</li>
-        <li><strong>Python SDK</strong> — async support with <code>azure-cosmos</code></li>
-    </ul>
-    <aside class="notes">
-        Cosmos DB is a great fit for MCP servers because each user's data can be isolated by partition key. Managed identity means no secrets to manage. The Python SDK supports async operations which fits well with FastMCP's async tools.
-    </aside>
+    <h2>Cosmos DB<br>data storage</h2>
 </section>
 
 <section>
@@ -768,44 +1136,63 @@ resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
     </aside>
 </section>
 
-<!-- ==========================================
-     CODE WALKTHROUGH: COSMOS DB SDK
-     ========================================== -->
-<section class="heading-only">
-    <h2>Code: Cosmos DB<br>Python SDK</h2>
-</section>
-
 <section>
     <h3>Setting up the Cosmos DB client</h3>
-    <pre style="font-size: 0.55em;"><code data-trim data-noescape class="python">
-from azure.cosmos.aio import CosmosClient
-from azure.identity.aio import ManagedIdentityCredential, AzureDeveloperCliCredential
+    <p style="margin-top: 6px;">Use <code>azure-cosmos</code> for easy Python integration with Cosmos DB:</p>
 
-# Production: managed identity. Local: azd CLI credential.
-if RUNNING_IN_PRODUCTION:
-    azure_credential = ManagedIdentityCredential(
-        client_id=os.environ["AZURE_CLIENT_ID"])
-else:
-    azure_credential = AzureDeveloperCliCredential(
-        tenant_id=os.environ["AZURE_TENANT_ID"])
+    <pre style="font-size: 0.67em; height:530px;"><code data-trim data-noescape class="python">
+from azure.cosmos.aio import CosmosClient
+from azure.identity.aio import ManagedIdentityCredential
+
+azure_credential = ManagedIdentityCredential(
+  client_id=os.environ["AZURE_CLIENT_ID"])
 
 cosmos_client = CosmosClient(
-    url=f"https://{os.environ['AZURE_COSMOSDB_ACCOUNT']}.documents.azure.com:443/",
-    credential=azure_credential,
+  url=f"https://{os.environ['AZURE_COSMOSDB_ACCOUNT']}.documents.azure.com/",
+  credential=azure_credential,
 )
-cosmos_db = cosmos_client.get_database_client(os.environ["AZURE_COSMOSDB_DATABASE"])
+cosmos_db = cosmos_client.get_database_client(
+    os.environ["AZURE_COSMOSDB_DATABASE"])
 cosmos_container = cosmos_db.get_container_client(
     os.environ["AZURE_COSMOSDB_USER_CONTAINER"])
     </code></pre>
-    <p style="font-size: 0.7em;">No connection strings — identity-based access everywhere.</p>
+    <p>🔒 Cosmos DB supports keyless access via managed identity.</p>
     <aside class="notes">
         The Cosmos DB client uses managed identity in production and the azd CLI credential for local development. No connection strings or secrets. The container is configured with user_id as the partition key.
     </aside>
 </section>
 
 <section>
+    <h3>Extracting user identity from the token</h3>
+    <p style="font-size: 0.78em;">We pull <code>user_id</code> from the OAuth token claims so that each tool can access the user id.</p>
+    <pre style="font-size: 0.55em;"><code data-trim data-noescape class="python">
+from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+
+class UserAuthMiddleware(Middleware):
+    def _get_user_id(self):
+        token = get_access_token()
+        if not (token and hasattr(token, "claims")):
+            return None
+        return token.claims.get("oid")  # Entra Object ID
+
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+        user_id = self._get_user_id()
+        if context.fastmcp_context is not None:
+            await context.fastmcp_context.set_state("user_id", user_id)
+        return await call_next(context)
+
+mcp = FastMCP("Expenses Tracker", auth=auth,
+              middleware=[UserAuthMiddleware()])
+    </code></pre>
+    <aside class="notes">
+        Middleware extracts the user's Object ID (oid) from the JWT claims on every tool call. This OID uniquely identifies the user in Entra and becomes the key for storing their data in Cosmos DB. The state is passed through the FastMCP context so tools can access it.
+    </aside>
+</section>
+
+<section>
     <h3>Tool: add_user_expense</h3>
-    <pre style="font-size: 0.48em;"><code data-trim data-noescape class="python">
+    <pre style="font-size: 0.6em; height:730px;"><code data-trim data-noescape class="python">
 @mcp.tool
 async def add_user_expense(
     date: Annotated[date, "Date of the expense in YYYY-MM-DD format"],
@@ -819,7 +1206,6 @@ async def add_user_expense(
     user_id = await ctx.get_state("user_id")
     if not user_id:
         return "Error: Authentication required"
-
     expense_item = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -839,7 +1225,7 @@ async def add_user_expense(
 
 <section>
     <h3>Tool: get_user_expenses</h3>
-    <pre style="font-size: 0.5em;"><code data-trim data-noescape class="python">
+    <pre style="font-size: 0.58em; height:610px;"><code data-trim data-noescape class="python">
 @mcp.tool
 async def get_user_expenses(ctx: Context):
     """Get the authenticated user's expense data from Cosmos DB."""
@@ -850,7 +1236,6 @@ async def get_user_expenses(ctx: Context):
     query = "SELECT * FROM c WHERE c.user_id = @uid ORDER BY c.date DESC"
     parameters = [{"name": "@uid", "value": user_id}]
     expenses_data = []
-
     async for item in cosmos_container.query_items(
         query=query, parameters=parameters, partition_key=user_id
     ):
@@ -868,23 +1253,31 @@ async def get_user_expenses(ctx: Context):
     </aside>
 </section>
 
-<!-- ==========================================
-     DEMO: COSMOS DB DATA IN VS CODE
-     ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: Cosmos DB data</h2>
-    <p>Explore data in VS Code extension,<br>query per-user expenses</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Explore Cosmos DB data</h2>
+        <p>Use the <a target="_blank" href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-cosmosdb"><strong>Azure Cosmos DB for VS Code extension</strong></a><br>to browse databases, inspect documents, and run queries directly in VS Code.</p>
+    </div>
     <aside class="notes">
-        Show the Cosmos DB VS Code extension. Browse the container, show how documents are partitioned by user_id. Query for a specific user's expenses. Show how different users have isolated data.
+        Show the Azure Cosmos DB extension for VS Code, identifier `ms-azuretools.vscode-cosmosdb`. Browse the container, inspect document structure and partition key values, then query for a specific user's expenses. Show how different users have isolated data.
     </aside>
 </section>
 
-<!-- ==========================================
-     DEMO: COPILOT + COSMOS MCP SERVER
-     ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: GitHub Copilot +<br>Cosmos DB MCP server</h2>
-    <p>Chat with your data using the<br>Azure Cosmos DB MCP server</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Chat with Cosmos DB</h2>
+        <p>Use the <a target="_blank" href="https://learn.microsoft.com/azure/developer/azure-mcp-server/tools/azure-cosmos-db">Azure MCP server</a><br>
+         to interact with your data<br>using natural language queries.
+        </p>
+    </div>
     <aside class="notes">
         Use GitHub Copilot with the Cosmos DB MCP server installed. Show how you can ask questions about your data, explore the schema, and get insights — all through natural language.
     </aside>
@@ -919,68 +1312,119 @@ async def get_user_expenses(ctx: Context):
 
 <section>
     <h3>On-Behalf-Of (OBO) flow for Graph API</h3>
-    <ol style="font-size: 0.75em; line-height: 1.8;">
-        <li>User sends MCP request with their <strong>Entra access token</strong></li>
-        <li>Server exchanges that token for a <strong>Graph API token</strong> via OBO flow</li>
-        <li>Server calls Graph: <code>/me/transitiveMemberOf?$filter=id eq '{group_id}'</code></li>
-        <li>If user is in the admin group → tool executes</li>
-        <li>If not → tool is <strong>hidden and blocked</strong></li>
-    </ol>
-    <p style="font-size: 0.7em; margin-top: 10px;">
-        Production: OBO uses <strong>managed identity</strong> as federated credential (no secret).<br>
-        Local dev: OBO uses a <strong>client secret</strong> from the dev app registration.
-    </p>
-    <aside class="notes">
-        The OBO flow lets the server act on behalf of the user to call Graph API. In production, the managed identity provides the federated credential so no client secret is needed. Locally, a separate dev app registration with a client secret is used.
-    </aside>
-</section>
+    <svg viewBox="0 0 1100 660" style="width: 100%; max-width: 1100px; height: auto; margin-top: 6px;">
+        <text x="120" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#3a73ae">MCP client</text>
+        <text x="390" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#b86d12">MCP server</text>
+        <text x="680" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#6aa33c">Entra</text>
+        <text x="980" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#0f766e">Microsoft Graph</text>
 
-<!-- ==========================================
-     CODE WALKTHROUGH: ROLE-BASED ACCESS
-     ========================================== -->
-<section class="heading-only">
-    <h2>Code: Role-based<br>access control</h2>
+        <rect x="104" y="14" width="32" height="22" rx="4" fill="none" stroke="#3a73ae" stroke-width="4"/>
+        <line x1="120" y1="38" x2="120" y2="44" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="110" y1="46" x2="130" y2="46" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="114" y1="24" x2="126" y2="24" stroke="#3a73ae" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+        <rect x="375" y="14" width="30" height="42" rx="8" fill="#b86d12"/>
+        <rect x="381" y="22" width="18" height="4" rx="2" fill="#ffffff"/>
+        <rect x="381" y="32" width="18" height="4" rx="2" fill="#ffffff"/>
+        <rect x="381" y="42" width="18" height="4" rx="2" fill="#ffffff"/>
+        <circle cx="680" cy="31" r="20" fill="#e8f6d8" stroke="#7ac143" stroke-width="2.5"/>
+        <path d="M669 30 l8 8 l14 -16" fill="none" stroke="#7ac143" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="981" cy="31" r="18" fill="#0f766e"/>
+        <circle cx="973" cy="23" r="4" fill="#ffffff"/>
+        <circle cx="989" cy="23" r="4" fill="#ffffff"/>
+        <circle cx="973" cy="39" r="4" fill="#ffffff"/>
+        <circle cx="989" cy="39" r="4" fill="#ffffff"/>
+        <line x1="973" y1="23" x2="989" y2="23" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <line x1="973" y1="39" x2="989" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <line x1="973" y1="23" x2="973" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <line x1="989" y1="23" x2="989" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+
+        <line x1="120" y1="98" x2="120" y2="642" stroke="#d4e3f4" stroke-width="16" stroke-linecap="round"/>
+        <line x1="390" y1="98" x2="390" y2="642" stroke="#f7e7c6" stroke-width="16" stroke-linecap="round"/>
+        <line x1="680" y1="98" x2="680" y2="642" stroke="#dff0bf" stroke-width="16" stroke-linecap="round"/>
+        <line x1="980" y1="98" x2="980" y2="642" stroke="#cdeeed" stroke-width="16" stroke-linecap="round"/>
+
+        <line x1="128" y1="166" x2="371" y2="166" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="371,156 371,176 390,166" fill="#3a73ae"/>
+        <text x="250" y="154" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#3a73ae">tools/list or admin tool call</text>
+
+        <line x1="398" y1="258" x2="661" y2="258" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="661,248 661,268 680,258" fill="#b86d12"/>
+        <text x="530" y="244" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">OBO exchange using user token</text>
+
+        <line x1="672" y1="346" x2="409" y2="346" stroke="#7aa93c" stroke-width="4"/>
+        <polygon points="409,336 409,356 390,346" fill="#7aa93c"/>
+        <text x="530" y="332" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#7aa93c">returns Graph access token</text>
+
+        <line x1="398" y1="438" x2="961" y2="438" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="961,428 961,448 980,438" fill="#b86d12"/>
+        <text x="680" y="424" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">check transitive group membership</text>
+
+        <line x1="972" y1="526" x2="409" y2="526" stroke="#0f766e" stroke-width="4"/>
+        <polygon points="409,516 409,536 390,526" fill="#0f766e"/>
+        <text x="680" y="512" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#0f766e">member or not?</text>
+
+        <line x1="382" y1="578" x2="348" y2="578" stroke="#b86d12" stroke-width="4"/>
+        <line x1="164" y1="578" x2="139" y2="578" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="139,568 139,588 120,578" fill="#b86d12"/>
+        <rect x="164" y="554" width="184" height="48" rx="12" fill="#f7fbef" stroke="#9ecf55" stroke-dasharray="6 4"/>
+        <text x="256" y="574" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">if member  ✓</text>
+        <text x="256" y="593" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">show tool / allow call</text>
+
+        <line x1="382" y1="636" x2="348" y2="636" stroke="#b86d12" stroke-width="4"/>
+        <line x1="164" y1="636" x2="139" y2="636" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="139,626 139,646 120,636" fill="#b86d12"/>
+        <rect x="164" y="612" width="184" height="48" rx="12" fill="#fff1f0" stroke="#e26d5a" stroke-dasharray="6 4"/>
+        <text x="256" y="632" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">if not  ✕</text>
+        <text x="256" y="651" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">hide tool / block call</text>
+    </svg>
+    <aside class="notes">
+        This is the same role-check flow used during tools listing and again at invocation time. The MCP client either asks for the tools list or attempts an admin tool call. The MCP server uses OBO to exchange the user's token for a Graph token, calls Microsoft Graph to check transitive membership in the admin group, and then either shows or runs the admin tool, or hides and blocks it.
+    </aside>
 </section>
 
 <section>
     <h3>Checking group membership via Graph API</h3>
-    <pre style="font-size: 0.5em;"><code data-trim data-noescape class="python">
-async def check_user_in_group(graph_token: str, group_id: str) -> bool:
-    """Check if the user is a member of the specified group."""
-    async with httpx.AsyncClient() as client:
-        url = (
-            "https://graph.microsoft.com/v1.0/me/transitiveMemberOf"
-            "/microsoft.graph.group"
-            f"?$filter=id eq '{group_id}'&$count=true"
-        )
-        response = await client.get(url, headers={
-            "Authorization": f"Bearer {graph_token}",
-            "ConsistencyLevel": "eventual",
-        })
-        response.raise_for_status()
-        return response.json().get("@odata.count", 0) > 0
-    </code></pre>
+    <p style="font-size: 0.74em;">The server uses MSAL for token exchange, then Graph API to check group membership:</p>
+    <pre style="font-size: 0.53em; height: 600px;"><code data-trim data-noescape class="python">
+confidential_client = ConfidentialClientApplication(
+    client_id=entra_client_id,
+    client_credential=client_credential,
+    authority=f"https://login.microsoftonline.com/{os.environ['AZURE_TENANT_ID']}",
+    token_cache=TokenCache(),
+)
+graph_token = confidential_client.acquire_token_on_behalf_of(
+    user_assertion=ctx.token.token,
+    scopes=["https://graph.microsoft.com/.default"],
+)
+
+client = httpx.AsyncClient()
+response = await client.get(
+    "https://graph.microsoft.com/v1.0/me/transitiveMemberOf"
+    "/microsoft.graph.group"
+    f"?$filter=id eq '{group_id}'&$count=true",
+    headers={
+        "Authorization": f"Bearer {graph_token['access_token']}",
+        "ConsistencyLevel": "eventual",
+    },
+)
+is_admin = response.json().get("@odata.count", 0) > 0</code></pre>
     <aside class="notes">
-        The Graph API call checks transitive membership, so nested groups work too. The ConsistencyLevel: eventual header is required for $count queries.
+        This is the core OBO pattern. The server starts from an existing confidential client, exchanges the user's token for a Graph token, and then calls Graph to check transitive group membership. The ConsistencyLevel: eventual header is required for count-based membership queries.
     </aside>
 </section>
 
 <section>
-    <h3>Component-level authorization in FastMCP</h3>
-    <pre style="font-size: 0.5em;"><code data-trim data-noescape class="python">
-async def require_admin_group(ctx: AuthContext) -> bool:
-    """Auth check: user must be in the admin group."""
-    admin_group_id = os.environ.get("ENTRA_ADMIN_GROUP_ID", "")
-    if not admin_group_id or not confidential_client or ctx.token is None:
-        return False
+    <h3>Enforcing role-based access in tools</h3>
 
+    <p>FastMCP runs this auth check at both tools listing time <br><em>and</em> tool invocation time:</p>
+
+    <pre style="font-size: 0.7em; height:500px;"><code data-trim data-noescape class="python">
+async def require_admin_group(ctx: AuthContext) -> bool:
+    admin_group_id = os.environ["ENTRA_ADMIN_GROUP_ID"]
     graph_token = confidential_client.acquire_token_on_behalf_of(
         user_assertion=ctx.token.token,
         scopes=["https://graph.microsoft.com/.default"],
     )
-    if "error" in graph_token:
-        return False
-
     return await check_user_in_group(
         graph_token["access_token"], admin_group_id)
 
@@ -989,60 +1433,32 @@ async def get_expense_stats(ctx: Context):
     """Get expense statistics. Only accessible to admins."""
     ...
     </code></pre>
-    <p style="font-size: 0.7em;">Non-admin users won't even <strong>see</strong> this tool in the tools list.</p>
+    <p style="font-size: 0.7em;">Non-admin users won't even see <code>get_expense_stats</code> in the tools list.</p>
     <aside class="notes">
         FastMCP's component-level authorization runs the auth check both at tool discovery (tools/list) and at invocation time. The require_admin_group function uses the OBO flow to get a Graph token and check group membership. Non-admins won't see the tool at all.
     </aside>
 </section>
 
-<!-- ==========================================
-     DEMO: ROLE-BASED ACCESS
-     ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: Role-based access</h2>
-    <p>Admin vs. regular user tool visibility</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Role-based access</h2>
+        <p>Admin vs. regular user tool visibility</p>
+    </div>
     <aside class="notes">
         Show that an admin user can see and use the get_expense_stats tool. Switch to a non-admin user and show the tool is hidden. Try to call it directly — it's blocked.
     </aside>
 </section>
 
-<!-- ==========================================
-     SECTION: DEV TIPS WITH COSMOS DB
-     ========================================== -->
 <section class="heading-only">
-    <h2>Development tips for<br>Cosmos DB + MCP</h2>
+    <h2>Next steps</h2>
 </section>
 
 <section>
-    <h3>VS Code extension for Cosmos DB</h3>
-    <ul>
-        <li>Browse databases, containers, and documents</li>
-        <li>View partition key values and document structure</li>
-        <li>Run SQL queries directly in VS Code</li>
-        <li>Edit and update documents inline</li>
-    </ul>
-    <p style="font-size: 0.8em;">Install: search "Azure Databases" in VS Code extensions marketplace</p>
-    <aside class="notes">
-        The VS Code extension for Cosmos DB lets you explore your data without leaving the editor. Great for debugging — you can see exactly what documents your MCP server wrote and verify partition key values.
-    </aside>
-</section>
-
-<section>
-    <h3>Azure Cosmos DB MCP server</h3>
-    <p>Chat with GitHub Copilot about your Cosmos DB data:</p>
-    <ul style="font-size: 0.8em;">
-        <li>Explore database schema and container configurations</li>
-        <li>Query data using natural language</li>
-        <li>Get insights about partition key usage and RU consumption</li>
-    </ul>
-    <p style="font-size: 0.7em;"><a target="_blank" href="https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/tools/azure-cosmos-db">Cosmos DB MCP documentation</a></p>
-    <aside class="notes">
-        The Cosmos DB MCP server from Microsoft lets GitHub Copilot access your Cosmos DB account. You can ask questions about your data, schema, and performance.
-    </aside>
-</section>
-
-<section>
-    <h3>Copilot agent skills for Cosmos DB</h3>
+    <h3>Agent skills for Cosmos DB</h3>
     <p>Use the <code>cosmosdb-best-practices</code> agent skill to:</p>
     <ul style="font-size: 0.8em;">
         <li>Review partition key design</li>
@@ -1058,39 +1474,20 @@ async def get_expense_stats(ctx: Context):
     </aside>
 </section>
 
-<!-- ==========================================
-     DEMO: COPILOT AGENT SKILLS
-     ========================================== -->
-<section class="demo-slide">
-    <h2>Demo: Copilot agent skills</h2>
-    <p>Reviewing Cosmos DB data model<br>and optimizing queries</p>
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Copilot agent skills</h2>
+        <p>Reviewing Cosmos DB data model<br>and optimizing queries</p>
+    </div>
     <aside class="notes">
         Use GitHub Copilot with the cosmosdb-best-practices skill. Ask it to review the data model. Show how it analyzes the partition key choice, query patterns, and suggests improvements.
     </aside>
 </section>
 
-<!-- ==========================================
-     CONCLUSIONS
-     ========================================== -->
-<section>
-    <h3>What we covered</h3>
-    <ul>
-        <li>FastMCP + <strong>RemoteAuthProvider</strong> for direct Entra authentication</li>
-        <li class="fragment">Cosmos DB with <strong>partition key = user_id</strong> for per-user data isolation</li>
-        <li class="fragment"><strong>Component-level authorization</strong> using Entra groups via Graph API</li>
-        <li class="fragment">Dev tools: VS Code extension, Cosmos DB MCP server, agent skills</li>
-    </ul>
-</section>
-
-<section>
-    <h3>Key takeaways</h3>
-    <ul>
-        <li>MCP servers can be <strong>identity-aware</strong> — not just tools, but <em>personalized</em> tools</li>
-        <li class="fragment">Use <strong>RemoteAuthProvider</strong> + pre-registered clients for the simplest Entra integration</li>
-        <li class="fragment">Design Cosmos DB partition keys around <strong>user identity</strong> for natural data isolation</li>
-        <li class="fragment">FastMCP's <code>auth=</code> parameter on tools enables <strong>fine-grained access control</strong></li>
-    </ul>
-</section>
 
 <!-- ==========================================
      THANK YOU
