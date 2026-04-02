@@ -115,8 +115,9 @@
         .reveal section.demo-slide {
             display: flex !important;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            padding-top: 60px;
             text-align: center;
             height: 100%;
             min-height: 720px;
@@ -230,9 +231,9 @@
             inset: 72px 88px;
             border-radius: 44px;
             background:
-                radial-gradient(circle at 82% 18%, rgba(14, 125, 205, 0.14) 0%, rgba(14, 125, 205, 0) 30%),
-                radial-gradient(circle at 12% 86%, rgba(15, 118, 110, 0.12) 0%, rgba(15, 118, 110, 0) 28%),
-                linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(210, 233, 253, 0.5) 100%);
+                radial-gradient(circle at 82% 18%, rgba(14, 125, 205, 0.06) 0%, rgba(14, 125, 205, 0) 30%),
+                radial-gradient(circle at 12% 86%, rgba(15, 118, 110, 0.05) 0%, rgba(15, 118, 110, 0) 28%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(210, 233, 253, 0.2) 100%);
             filter: blur(1px);
             z-index: 0;
         }
@@ -323,6 +324,9 @@
 			font-style: italic;
 			padding: 16px 20px;
 			border-radius: 8px;
+			text-align: left;
+			margin-left: 0;
+			margin-right: 0;
 		}
 
 		/* Table header accent */
@@ -402,7 +406,6 @@
     <h1 style="font-size:1.8em;">Know your user:<br>Identity-aware MCP servers<br>with Cosmos DB</h1>
     <br>
     <h3>Pamela Fox</h3>
-    <p style="font-size: 0.8em;"><a target="_blank" href="https://github.com/pamelafox">github.com/pamelafox</a></p>
 </section>
 
 <!-- ==========================================
@@ -414,7 +417,7 @@
             <span class="demo-badge">Demo</span>
         </div>
         <div class="demo-card-accent"></div>
-        <h2>The finished server</h2>
+        <h2>What we're building</h2>
         <p>Authenticated expense tracking MCP server<br>with per-user data in Cosmos DB</p>
     </div>
     <aside class="notes">
@@ -505,7 +508,7 @@
 
 <section>
     <h3>Model Context Protocol</h3>
-    <p>An open protocol that defines how AI applications get context from external tools and data sources. It was created by Anthropic and is now part of the <strong>Agentic AI Foundation</strong> under the Linux Foundation.</p>
+    <p>An open protocol that defines how AI applications get context from external tools and data sources.</p>
     <svg viewBox="0 0 900 400" style="width: 100%; margin: 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
         <rect x="340" y="20" width="220" height="60" rx="12" fill="#edf4fc" stroke="#0078D4" stroke-width="2"/>
         <text x="450" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#2b2b2b">🤖 AI agent</text>
@@ -582,7 +585,7 @@
 
 <section>
     <h3>MCP architecture</h3>
-    <svg viewBox="0 0 1100 560" style="width: 100%; margin: 4px auto 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 1100 560" style="width: 100%; margin: -65px auto 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <linearGradient id="serverPanelGradient" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#f7fbff"/>
@@ -593,7 +596,7 @@
             </marker>
         </defs>
 
-        <rect x="28" y="56" width="320" height="504" rx="54" fill="#b8d1ee"/>
+        <rect x="28" y="66" width="320" height="490" rx="54" fill="#b8d1ee"/>
         <text x="188" y="128" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#111827">MCP Host</text>
         <text x="188" y="160" text-anchor="middle" font-family="Inter, sans-serif" font-size="24" font-style="italic" fill="#111827">GitHub Copilot, Claude,</text>
         <text x="188" y="190" text-anchor="middle" font-family="Inter, sans-serif" font-size="24" font-style="italic" fill="#111827">ChatGPT...</text>
@@ -649,15 +652,12 @@
     </aside>
 </section>
 
-<!-- ==========================================
-     SECTION: MCP SERVER ARCHITECTURE FOR THIS DEMO
-     ========================================== -->
 <section class="heading-only">
-    <h2>Anatomy of our MCP server</h2>
+    <h2>Building our MCP server</h2>
 </section>
 
-<section>
-    <h3>Components of our MCP server</h3>
+<section data-visibility="hidden">
+    <h3>MCP server components</h3>
     <p>This identity-aware MCP server combines four pieces:</p>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; align-items: stretch;">
         <div style="border: 2px solid #0078D4; border-radius: 14px; padding: 16px 18px; background: #f5f9ff;">
@@ -684,7 +684,7 @@
 
 <section>
     <h3>MCP server architecture</h3>
-    <svg viewBox="0 0 1100 620" style="width: 100%; margin: 6px auto 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 60 1100 560" style="width: 100%; margin: -10px auto 0 auto; display: block;" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <linearGradient id="serverCardGrad" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#ffffff"/>
@@ -698,38 +698,35 @@
             </marker>
         </defs>
 
-        <rect x="0" y="150" width="220" height="170" rx="18" fill="url(#serverCardGrad)" stroke="#8eb6de" stroke-width="2"/>
-        <image href="vscode.png" x="70" y="166" width="80" height="80"/>
-        <text x="110" y="272" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">VS Code</text>
-        <text x="110" y="300" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2b2b2b">MCP client</text>
+        <rect x="0" y="145" width="220" height="170" rx="18" fill="url(#serverCardGrad)" stroke="#8eb6de" stroke-width="2"/>
+        <image href="vscode.png" x="70" y="161" width="80" height="80"/>
+        <text x="110" y="267" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">VS Code</text>
+        <text x="110" y="295" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2b2b2b">MCP client</text>
 
-        <rect x="390" y="110" width="380" height="240" rx="24" fill="url(#serverCardGrad)" stroke="#0078D4" stroke-width="2.4"/>
-        <text x="580" y="160" text-anchor="middle" font-family="Outfit, sans-serif" font-size="34" font-weight="700" fill="#173a63">FastMCP server</text>
-        <rect x="460" y="182" width="240" height="54" rx="14" fill="#365fb6"/>
-        <text x="580" y="216" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" font-weight="700" fill="#ffffff">RemoteAuthProvider</text>
-        <rect x="460" y="250" width="240" height="54" rx="14" fill="#5f8fcb"/>
-        <text x="580" y="284" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" font-weight="700" fill="#ffffff">AzureJWTVerifier</text>
-        <text x="580" y="328" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#445">per-user tools and middleware</text>
+        <rect x="390" y="145" width="380" height="170" rx="24" fill="url(#serverCardGrad)" stroke="#0078D4" stroke-width="2.4"/>
+        <image href="fastmcp.avif" x="480" y="105" width="200" height="200"/>
+        <text x="580" y="267" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">FastMCP server</text>
+        <text x="580" y="295" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#445">tools and middleware</text>
 
-        <rect x="905" y="145" width="190" height="180" rx="22" fill="url(#serverCardGrad)" stroke="#8eb6de" stroke-width="2"/>
-        <image href="cosmos_logo.svg" x="957" y="160" width="86" height="86"/>
-        <text x="1000" y="272" text-anchor="middle" font-family="Outfit, sans-serif" font-size="28" font-weight="700" fill="#173a63">Cosmos DB</text>
-        <text x="1000" y="300" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">per-user data</text>
+        <rect x="905" y="140" width="190" height="180" rx="22" fill="url(#serverCardGrad)" stroke="#8eb6de" stroke-width="2"/>
+        <image href="cosmos_logo.svg" x="957" y="155" width="86" height="86"/>
+        <text x="1000" y="267" text-anchor="middle" font-family="Outfit, sans-serif" font-size="28" font-weight="700" fill="#173a63">Cosmos DB</text>
+        <text x="1000" y="295" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">per-user data</text>
 
-        <rect x="345" y="470" width="230" height="130" rx="20" fill="#f5f9ff" stroke="#8eb6de" stroke-width="2"/>
-        <image href="10232-icon-service-App-Registrations.svg" x="434" y="480" width="52" height="52"/>
-        <text x="460" y="560" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#173a63">Microsoft Entra</text>
-        <text x="460" y="588" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">OAuth 2.1 and JWTs</text>
+        <rect x="345" y="400" width="230" height="130" rx="20" fill="#f5f9ff" stroke="#8eb6de" stroke-width="2"/>
+        <image href="10232-icon-service-App-Registrations.svg" x="434" y="410" width="52" height="52"/>
+        <text x="460" y="490" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#173a63">Microsoft Entra</text>
+        <text x="460" y="518" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">user authentication</text>
 
-        <rect x="585" y="470" width="230" height="130" rx="20" fill="#f5f9ff" stroke="#8eb6de" stroke-width="2"/>
-        <image href="10223-icon-service-Groups.svg" x="674" y="480" width="52" height="52"/>
-        <text x="700" y="560" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#173a63">Microsoft Graph</text>
-        <text x="700" y="588" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">group membership</text>
+        <rect x="585" y="400" width="230" height="130" rx="20" fill="#f5f9ff" stroke="#8eb6de" stroke-width="2"/>
+        <image href="10223-icon-service-Groups.svg" x="674" y="410" width="52" height="52"/>
+        <text x="700" y="490" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#173a63">Microsoft Graph</text>
+        <text x="700" y="518" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#2b2b2b">group membership</text>
 
         <line x1="220" y1="230" x2="390" y2="230" stroke="#173a63" stroke-width="5" marker-end="url(#serverArchArrowHorizontal)"/>
         <line x1="770" y1="230" x2="905" y2="230" stroke="#173a63" stroke-width="5" marker-end="url(#serverArchArrowHorizontal)"/>
-        <line x1="460" y1="470" x2="460" y2="350" stroke="#173a63" stroke-width="4.5" marker-end="url(#serverArchArrow)"/>
-        <line x1="700" y1="470" x2="700" y2="350" stroke="#173a63" stroke-width="4.5" marker-end="url(#serverArchArrow)"/>
+        <line x1="460" y1="400" x2="460" y2="315" stroke="#173a63" stroke-width="4.5" marker-end="url(#serverArchArrow)"/>
+        <line x1="700" y1="400" x2="700" y2="315" stroke="#173a63" stroke-width="4.5" marker-end="url(#serverArchArrow)"/>
 
         <g transform="translate(305 230)">
             <rect x="-38" y="-15" width="76" height="30" rx="15" fill="#fff" stroke="#0078D4" stroke-width="1.8"/>
@@ -739,11 +736,11 @@
             <rect x="-30" y="-15" width="60" height="30" rx="15" fill="#fff" stroke="#0078D4" stroke-width="1.8"/>
             <text x="0" y="5" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#0078D4" font-weight="700">Query</text>
         </g>
-        <g transform="translate(460 425)">
+        <g transform="translate(460 370)">
             <rect x="-30" y="-15" width="60" height="30" rx="15" fill="#fff" stroke="#0078D4" stroke-width="1.8"/>
             <text x="0" y="5" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#0078D4" font-weight="700">JWT</text>
         </g>
-        <g transform="translate(700 425)">
+        <g transform="translate(700 370)">
             <rect x="-30" y="-15" width="60" height="30" rx="15" fill="#fff" stroke="#0078D4" stroke-width="1.8"/>
             <text x="0" y="5" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#0078D4" font-weight="700">OBO</text>
         </g>
@@ -753,17 +750,175 @@
     </aside>
 </section>
 
-<!-- ==========================================
-     SECTION: MCP AUTHENTICATION
-     ========================================== -->
+
 <section class="heading-only">
-    <h2>MCP authentication</h2>
+    <h2>Storing per-user data<br>with Cosmos DB</h2>
+</section>
+
+<section>
+    <h3>Cosmos DB data model</h3>
+    <p style="font-size: 0.8em; margin-bottom: 36px;">Azure Cosmos DB is a NoSQL database that stores JSON documents in containers.
+    </p>
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div style="flex: 1;">
+            <p style="font-size: 0.8em;">Each expense is stored as a <strong>document</strong> that includes a <code>user_id</code> <strong>property</strong>:</p>
+            <pre style="font-size: 0.5em;"><code data-trim data-noescape class="json">
+{
+  "id": "a1b2c3d4-...",
+  "user_id": "00000000-0000-...",
+  "date": "2026-03-31",
+  "amount": 20.00,
+  "category": "food",
+  "description": "Avocado toast",
+  "payment_method": "visa"
+}
+            </code></pre>
+        </div>
+        <div style="flex: 1; border-left: 1px solid #ccc; padding-left: 10px; padding-bottom: 30px;" class="fragment">
+            <p style="font-size: 0.9em;">Partition key = <code>/user_id</code></p>
+            <ul style="font-size: 0.85em;">
+                <li>All of a user's expenses are in the <strong>same partition</strong></li>
+                <li>Queries with <code>WHERE user_id = @uid</code> are <strong>single-partition</strong> (fast)</li>
+                <li>The <code>user_id</code> is an Entra object ID, unique for each user.</li>
+            </ul>
+        </div>
+    </div>
+    <aside class="notes">
+        The partition key is the user_id from the Entra OID. This means all of a user's expenses live in the same logical partition. Queries filtered by user_id are single-partition and very efficient. Cross-partition queries are only used for admin-level aggregate stats.
+    </aside>
+</section>
+
+<section>
+    <h3>Setting up the Cosmos DB client</h3>
+    <p style="margin-top: 6px;">Use <code>azure-cosmos</code> for easy Python integration with Cosmos DB:</p>
+
+    <pre style="font-size: 0.65em; height:480px;"><code data-trim data-noescape class="python">
+from azure.cosmos.aio import CosmosClient
+from azure.identity.aio import ManagedIdentityCredential
+
+azure_credential = ManagedIdentityCredential(
+  client_id=os.environ["AZURE_CLIENT_ID"])
+
+cosmos_client = CosmosClient(
+  url=f"https://{os.environ['AZURE_COSMOSDB_ACCOUNT']}.documents.azure.com/",
+  credential=azure_credential,
+)
+cosmos_db = cosmos_client.get_database_client(
+    os.environ["AZURE_COSMOSDB_DATABASE"])
+cosmos_container = cosmos_db.get_container_client(
+    os.environ["AZURE_COSMOSDB_USER_CONTAINER"])
+    </code></pre>
+    <p style="font-size:0.9em">🔒 Cosmos DB supports keyless access via managed identity.</p>
+    <aside class="notes">
+        The Cosmos DB client uses managed identity in production and the azd CLI credential for local development. No connection strings or secrets. The container is configured with user_id as the partition key.
+    </aside>
+</section>
+
+
+<section>
+    <h3>Tool: add_user_expense</h3>
+    <pre style="font-size: 0.50em; height:630px;"><code data-trim data-noescape class="python">
+@mcp.tool
+async def add_user_expense(
+    date: Annotated[date, "Date of the expense in YYYY-MM-DD format"],
+    amount: Annotated[float, "Positive numeric amount of the expense"],
+    category: Annotated[Category, "Category label"],
+    description: Annotated[str, "Human-readable description of the expense"],
+    payment_method: Annotated[PaymentMethod, "Payment method used"],
+    ctx: Context,
+):
+    """Add a new expense to Cosmos DB."""
+    user_id = await ctx.get_state("user_id")
+    if not user_id:
+        return "Error: Authentication required"
+    expense_item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": date.isoformat(),
+        "amount": amount,
+        "category": category.value,
+        "description": description,
+        "payment_method": payment_method.value,
+    }
+    await cosmos_container.create_item(body=expense_item)
+    return f"Successfully added expense: ${amount} for {description}"
+    </code></pre>
+    <aside class="notes">
+        The tool uses typed Annotated parameters so the LLM knows exactly what to fill in. The user_id comes from middleware (extracted from the JWT). The expense document includes the user_id as both a property and the partition key value.
+    </aside>
+</section>
+
+<section>
+    <h3>Tool: get_user_expenses</h3>
+    <pre style="font-size: 0.50em; height:540px;"><code data-trim data-noescape class="python">
+@mcp.tool
+async def get_user_expenses(ctx: Context):
+    """Get the authenticated user's expense data from Cosmos DB."""
+    user_id = await ctx.get_state("user_id")
+    if not user_id:
+        return "Error: Authentication required"
+    
+    query = "SELECT * FROM c WHERE c.user_id = @uid ORDER BY c.date DESC"
+    parameters = [{"name": "@uid", "value": user_id}]
+    expenses_data = []
+    async for item in cosmos_container.query_items(
+        query=query, parameters=parameters, partition_key=user_id
+    ):
+        expenses_data.append(item)
+
+    return json.dumps([{
+        "date": e.get("date"), "amount": e.get("amount"),
+        "category": e.get("category"), "description": e.get("description"),
+        "payment_method": e.get("payment_method"),
+    } for e in expenses_data], indent=2)
+    </code></pre>
+    <p style="font-size: 0.7em;">Passing <code>partition_key=user_id</code> makes this a <strong>single-partition query</strong>.</p>
+    <aside class="notes">
+        The query filters by user_id and passes the partition key to the SDK, making it a single-partition read. Parameterized queries prevent injection. The result is JSON that the LLM can summarize or analyze.
+    </aside>
+</section>
+
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Exploring Cosmos DB data</h2>
+        <p>Use <a target="_blank" href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-cosmosdb"><strong>Azure Cosmos DB VS Code extension</strong></a><br>to browse databases, inspect documents, and run queries directly in VS Code.</p>
+    </div>
+    <aside class="notes">
+        Show the Azure Cosmos DB extension for VS Code, identifier `ms-azuretools.vscode-cosmosdb`. Browse the container, inspect document structure and partition key values, then query for a specific user's expenses. Show how different users have isolated data.
+    </aside>
+</section>
+
+<section class="demo-slide demo-card">
+    <div class="demo-card-shell">
+        <div class="demo-card-meta">
+            <span class="demo-badge">Demo</span>
+        </div>
+        <div class="demo-card-accent"></div>
+        <h2>Chat with Cosmos DB</h2>
+        <p>Use the <a target="_blank" href="https://learn.microsoft.com/azure/developer/azure-mcp-server/tools/azure-cosmos-db">Azure MCP server</a><br>
+         to interact with your data<br>using natural language queries.
+        </p>
+    </div>
+    <aside class="notes">
+        Use GitHub Copilot with the Cosmos DB MCP server installed.
+        Show how you can ask questions about your data, explore the schema, and get insights — all through natural language.
+        "List the items in my Azure Cosmos DB for this project using Azure MCP"
+    </aside>
+</section>
+
+
+<section class="heading-only">
+    <h2>Authenticating the user<br>with Microsoft Entra</h2>
 </section>
 
 <section>
     <h3>OAuth-based access flow</h3>
-    <p style="font-size: 0.82em; margin-bottom: 6px;">An MCP client can make requests to an MCP server on behalf of a signed-in user.</p>
-    <svg viewBox="0 0 1100 620" style="width: 100%; max-width: 1100px; height: auto;">
+    <p style="font-size: 0.82em;">An MCP client can make requests to an MCP server on behalf of a signed-in user:</p>
+    <svg viewBox="0 0 1100 620" style="margin-top: -90px; width: 100%; max-width: 1100px; height: auto;">
         <defs>
             <linearGradient id="oauthFlowCard" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ffffff"/>
@@ -808,10 +963,10 @@
             <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#147ad6">MCP</text>
         </g>
 
-        <rect x="388" y="534" width="362" height="72" rx="18" fill="#f5f7fb" stroke="#dbe6f5" stroke-width="2"/>
-        <text x="406" y="560" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">{</text>
-        <text x="424" y="582" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"jsonrpc": "2.0", "result": {</text>
-        <text x="424" y="602" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"content": [{ "amount": 200 }, ...] } }</text>
+        <rect x="346" y="534" width="430" height="72" rx="18" fill="#f5f7fb" stroke="#dbe6f5" stroke-width="2"/>
+        <text x="364" y="560" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">{</text>
+        <text x="382" y="582" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"jsonrpc": "2.0", "result": {</text>
+        <text x="382" y="602" font-family="SFMono-Regular, Consolas, monospace" font-size="11.5" fill="#2b2b2b">"content": [{ "amount": 200 }, ...] } }</text>
     </svg>
     <aside class="notes">
         This is the high-level access pattern for OAuth-protected MCP over HTTP. The client sends a normal MCP request, but includes a bearer token for the signed-in user. The server validates that token and returns user-scoped results. We'll use the next slides to explain how the client gets recognized and how the auth flow is wired up.
@@ -819,9 +974,9 @@
 </section>
 
 <section>
-    <h3>OAuth 2.1 overview</h3>
+    <h3>OAuth 2.1 roles in MCP</h3>
     <p style="font-size: 0.82em; margin-bottom: 8px;">MCP authentication builds on the standard OAuth 2.1 roles and token flow.</p>
-    <svg viewBox="0 0 1100 560" style="width: 100%; max-width: 1100px; height: auto;">
+    <svg viewBox="0 0 1200 580" style="width: 100%; max-width: 1200px; height: auto;">
         <defs>
             <linearGradient id="oauthRoleCard" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ffffff"/>
@@ -829,39 +984,49 @@
             </linearGradient>
         </defs>
 
-        <line x1="240" y1="286" x2="948" y2="286" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
-        <line x1="550" y1="174" x2="550" y2="426" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
+        <!-- Cross lines -->
+        <line x1="340" y1="296" x2="860" y2="296" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
+        <line x1="600" y1="180" x2="600" y2="420" stroke="#173a63" stroke-width="5" stroke-linecap="round"/>
 
-        <rect x="46" y="232" width="246" height="108" rx="22" fill="url(#oauthRoleCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <rect x="792" y="232" width="270" height="108" rx="22" fill="url(#oauthRoleCard)" stroke="#d99a34" stroke-width="2.5"/>
-        <rect x="410" y="78" width="280" height="92" rx="22" fill="url(#oauthRoleCard)" stroke="#9ecf55" stroke-width="2.5"/>
-        <rect x="420" y="428" width="260" height="112" rx="22" fill="url(#oauthRoleCard)" stroke="#b26bb5" stroke-width="2.5"/>
-        <rect x="584" y="236" width="160" height="82" rx="18" fill="#fff7df" stroke="#f0c85d" stroke-width="2.5"/>
+        <!-- Card backgrounds -->
+        <rect x="430" y="50" width="340" height="130" rx="22" fill="url(#oauthRoleCard)" stroke="#9ecf55" stroke-width="2.5"/>
+        <rect x="60" y="228" width="280" height="136" rx="22" fill="url(#oauthRoleCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <rect x="860" y="228" width="300" height="136" rx="22" fill="url(#oauthRoleCard)" stroke="#d99a34" stroke-width="2.5"/>
+        <rect x="460" y="420" width="280" height="148" rx="22" fill="url(#oauthRoleCard)" stroke="#b26bb5" stroke-width="2.5"/>
+        <rect x="630" y="246" width="188" height="88" rx="18" fill="#f7fbef" stroke="#9ecf55" stroke-width="2.5"/>
 
-        <circle cx="550" cy="58" r="22" fill="#e8f6d8" stroke="#7ac143" stroke-width="2.5"/>
-        <path d="M539 57 l8 8 l14 -16" fill="none" stroke="#7ac143" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <text x="550" y="116" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#6aa33c">Authorization server (AS)</text>
-        <text x="550" y="146" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#6aa33c">login + consent</text>
+        <!-- Authorization server (AS) - icon inside -->
+        <circle cx="600" cy="86" r="20" fill="#e8f6d8" stroke="#7ac143" stroke-width="2.5"/>
+        <path d="M590 85 l7 7 l13 -15" fill="none" stroke="#7ac143" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="600" y="124" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#6aa33c">Authorization server (AS)</text>
+        <text x="600" y="156" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#6aa33c">Microsoft Entra</text>
 
-        <rect x="72" y="250" width="34" height="34" rx="7" fill="none" stroke="#3a73ae" stroke-width="5"/>
-        <text x="180" y="272" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#3a73ae">OAuth 2.1 client</text>
-        <text x="180" y="308" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#173a63">MCP client</text>
+        <!-- MCP client - laptop icon inside -->
+        <rect x="182" y="256" width="36" height="24" rx="4" fill="none" stroke="#3a73ae" stroke-width="4"/>
+        <line x1="200" y1="282" x2="200" y2="288" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="188" y1="290" x2="212" y2="290" stroke="#3a73ae" stroke-width="4" stroke-linecap="round"/>
+        <line x1="192" y1="268" x2="208" y2="268" stroke="#3a73ae" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+        <text x="200" y="318" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#3a73ae">OAuth 2.1 client</text>
+        <text x="200" y="348" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#173a63">MCP client</text>
 
-        <rect x="1012" y="246" width="34" height="50" rx="9" fill="#d99a34"/>
-        <rect x="1020" y="255" width="18" height="5" rx="2.5" fill="#ffffff"/>
-        <rect x="1020" y="272" width="18" height="5" rx="2.5" fill="#ffffff"/>
-        <rect x="1020" y="289" width="18" height="5" rx="2.5" fill="#ffffff"/>
-        <text x="923" y="270" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#cf8c24">OAuth 2.1 resource server</text>
-        <text x="927" y="308" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#cf8c24">MCP server</text>
+        <!-- MCP server - server icon inside -->
+        <rect x="994" y="256" width="32" height="46" rx="8" fill="#d99a34"/>
+        <rect x="1000" y="264" width="20" height="5" rx="2" fill="#ffffff"/>
+        <rect x="1000" y="275" width="20" height="5" rx="2" fill="#ffffff"/>
+        <rect x="1000" y="286" width="20" height="5" rx="2" fill="#ffffff"/>
+        <text x="1010" y="318" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#cf8c24">OAuth 2.1 resource server</text>
+        <text x="1010" y="348" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#cf8c24">MCP server</text>
 
-        <path d="M602 248 l14 10 l-5 18 h-18 l-5 -18 z" fill="#111111" stroke="#7a2c84" stroke-width="2"/>
-        <text x="676" y="272" text-anchor="middle" font-family="Outfit, sans-serif" font-size="18" font-weight="700" fill="#111111">Access token</text>
-        <text x="676" y="296" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#555555">issued by the AS</text>
+        <!-- Access token -->
+        <path d="M650 258 l14 10 l-5 18 h-18 l-5 -18 z" fill="#6aa33c" stroke="#4a8a2c" stroke-width="2"/>
+        <text x="736" y="282" text-anchor="middle" font-family="Outfit, sans-serif" font-size="21" font-weight="700" fill="#3d7a1c">Access token</text>
+        <text x="736" y="310" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#6aa33c">issued by the AS</text>
 
-        <text x="550" y="470" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#7a3f84">Resource owner</text>
-        <text x="550" y="500" text-anchor="middle" font-family="Outfit, sans-serif" font-size="22" font-weight="700" fill="#7a3f84">the signed-in user</text>
-        <circle cx="550" cy="522" r="18" fill="#982c9a"/>
-        <rect x="521" y="544" width="58" height="22" rx="11" fill="#982c9a"/>
+        <!-- Resource owner - user icon inside -->
+        <circle cx="600" cy="454" r="18" fill="#982c9a"/>
+        <rect x="572" y="470" width="56" height="20" rx="10" fill="#982c9a"/>
+        <text x="600" y="510" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#7a3f84">Resource owner</text>
+        <text x="600" y="542" text-anchor="middle" font-family="Outfit, sans-serif" font-size="26" font-weight="700" fill="#7a3f84">signed-in user</text>
     </svg>
     <aside class="notes">
         MCP auth is built on top of OAuth 2.1, which involves four entities:
@@ -878,7 +1043,7 @@
 
 <section>
     <h3>Choosing a client registration path</h3>
-    <svg viewBox="0 0 1100 590" style="width: 100%; max-width: 1100px; height: auto; margin-top: 8px;">
+    <svg viewBox="0 0 1100 520" style="width: 100%; max-width: 1100px; height: auto; margin-top: 0px;">
         <defs>
             <linearGradient id="authPathCard" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ffffff"/>
@@ -889,61 +1054,59 @@
             </marker>
         </defs>
 
-        <rect x="155" y="18" width="790" height="88" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <text x="550" y="71" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" fill="#1f1f1f">
+        <rect x="155" y="8" width="790" height="88" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="550" y="61" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" fill="#1f1f1f">
             <tspan>Does the </tspan>
             <tspan fill="#6aa33c" font-weight="700">auth server</tspan>
             <tspan> already know the </tspan>
             <tspan fill="#147ad6" font-weight="700">client?</tspan>
         </text>
 
-        <line x1="550" y1="106" x2="227" y2="202" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
-        <line x1="550" y1="106" x2="725" y2="202" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="550" y1="96" x2="227" y2="186" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="550" y1="96" x2="725" y2="186" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
 
-        <g transform="translate(390 160)">
+        <g transform="translate(390 146)">
             <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#e8f6d8" stroke="#7ac143" stroke-width="2"/>
             <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#468a1e">Yes</text>
         </g>
-        <g transform="translate(640 156)">
+        <g transform="translate(640 142)">
             <rect x="-30" y="-18" width="60" height="34" rx="17" fill="#fff0ea" stroke="#ef6a32" stroke-width="2"/>
             <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#d9581f">No</text>
         </g>
 
-        <rect x="82" y="202" width="290" height="100" rx="22" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <text x="227" y="252" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">Pre-registration</text>
-        <text x="227" y="284" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#2d2d2d">existing relationship</text>
+        <rect x="82" y="186" width="290" height="100" rx="22" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="227" y="236" text-anchor="middle" font-family="Outfit, sans-serif" font-size="30" font-weight="700" fill="#173a63">Pre-registration</text>
+        <text x="227" y="268" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#2d2d2d">existing relationship</text>
 
-        <rect x="430" y="202" width="590" height="100" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <text x="725" y="260" text-anchor="middle" font-family="Inter, sans-serif" font-size="25" fill="#1f1f1f">
+        <rect x="430" y="186" width="590" height="100" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="725" y="244" text-anchor="middle" font-family="Inter, sans-serif" font-size="25" fill="#1f1f1f">
             <tspan>If not, do both sides support </tspan>
             <tspan fill="#147ad6" font-weight="700">CIMD?</tspan>
         </text>
 
-        <line x1="725" y1="302" x2="542" y2="410" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
-        <line x1="725" y1="302" x2="900" y2="410" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="725" y1="286" x2="542" y2="380" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
+        <line x1="725" y1="286" x2="900" y2="380" stroke="#173a63" stroke-width="4" marker-end="url(#authPathArrow)"/>
 
-        <g transform="translate(634 360)">
+        <g transform="translate(634 336)">
             <rect x="-34" y="-18" width="68" height="34" rx="17" fill="#e8f6d8" stroke="#7ac143" stroke-width="2"/>
             <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#468a1e">Yes</text>
         </g>
-        <g transform="translate(812 356)">
+        <g transform="translate(812 332)">
             <rect x="-30" y="-18" width="60" height="34" rx="17" fill="#fff0ea" stroke="#ef6a32" stroke-width="2"/>
             <text x="0" y="7" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#d9581f">No</text>
         </g>
 
-        <rect x="360" y="410" width="365" height="142" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <text x="542" y="460" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">CIMD</text>
-        <text x="542" y="494" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Client ID Metadata Document</text>
-        <text x="542" y="522" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(default MCP path)</text>
+        <rect x="360" y="380" width="365" height="120" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="542" y="426" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">CIMD</text>
+        <text x="542" y="458" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Client ID Metadata Document</text>
+        <text x="542" y="484" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(default MCP path)</text>
 
-        <rect x="760" y="410" width="280" height="142" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
-        <text x="900" y="460" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">DCR</text>
-        <text x="900" y="492" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Dynamic Client</text>
-        <text x="900" y="518" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Registration</text>
-        <text x="900" y="542" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(legacy fallback)</text>
+        <rect x="760" y="380" width="310" height="120" rx="24" fill="url(#authPathCard)" stroke="#8eb6de" stroke-width="2.5"/>
+        <text x="915" y="426" text-anchor="middle" font-family="Outfit, sans-serif" font-size="32" font-weight="700" fill="#173a63">DCR</text>
+        <text x="915" y="458" text-anchor="middle" font-family="Inter, sans-serif" font-size="21" fill="#2d2d2d">Dynamic Client Registration</text>
+        <text x="915" y="484" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" fill="#2d2d2d">(legacy fallback)</text>
     </svg>
-    <p style="font-size: 0.72em; margin-top: 10px;"><strong>For this demo:</strong> Microsoft Entra does <strong>not</strong> support <strong>CIMD</strong> or <strong>DCR</strong>, so we use VS Code's known client ID for <strong>pre-registration</strong>.</p>
-    <p style="font-size: 0.62em; margin-top: 4px;"><strong>Alternative:</strong> put a DCR-capable auth proxy in front of Entra.</p>
+    <p style="font-size: 0.72em; margin-top: 10px;"><strong>For this demo:</strong> Microsoft Entra does <strong>not</strong> support <strong>CIMD</strong> or <strong>DCR</strong>, so we use <strong>pre-registration</strong> with VS Code's known client ID. (Alternative approach: put a DCR proxy in front of Entra.)</p>
     <aside class="notes">
         This tree matches the MCP auth spec's preferred decision order. If the auth server already knows the client, use pre-registration. If not, the modern MCP path is CIMD, where the client identifies itself with a hosted metadata document. If CIMD is unavailable, DCR is the legacy fallback. For this demo, Microsoft Entra does not support CIMD or DCR, so we rely on VS Code's known client ID for pre-registration. Another option would be to place a DCR-capable auth proxy in front of Entra.
     </aside>
@@ -1052,115 +1215,6 @@ mcp = FastMCP("Expenses Tracker", auth=auth)
     </aside>
 </section>
 
-<section data-visibility="hidden">
-    <h3>Entra app registration (key parts)</h3>
-    <pre style="font-size: 0.48em;"><code data-trim data-noescape class="bicep">
-resource appRegistration 'Microsoft.Graph/applications@v1.0' = {
-  displayName: 'MCP Expense Server'
-  uniqueName: 'mcp-expense-server-${resourceToken}'
-  identifierUris: ['api://${appRegistration.appId}']
-  api: {
-    requestedAccessTokenVersion: 2
-    oauth2PermissionScopes: [{
-      id: scopeId
-      value: 'user_impersonation'
-      type: 'User'
-      adminConsentDisplayName: 'Access MCP server'
-    }]
-    preAuthorizedApplications: [{
-      appId: 'aebc6443-996d-45c2-90f0-388ff96faa56'  // VS Code
-      delegatedPermissionIds: [scopeId]
-    }]
-  }
-}
-    </code></pre>
-    <p style="font-size: 0.7em;">Key requirements: <code>requestedAccessTokenVersion: 2</code>, <code>identifierUris</code>,<br>and VS Code's GUID in <code>preAuthorizedApplications</code></p>
-    <aside class="notes">
-        The app registration exposes a user_impersonation scope and pre-authorizes VS Code's Entra GUID. The identifierUris must be set for preAuthorizedApplications to work. requestedAccessTokenVersion: 2 is required because AzureJWTVerifier only supports v2 tokens. Without these settings, auth silently fails.
-    </aside>
-</section>
-
-<!-- ==========================================
-     DEMO: AUTH FLOW IN VS CODE
-     ========================================== -->
-<section class="demo-slide demo-card">
-    <div class="demo-card-shell">
-        <div class="demo-card-meta">
-            <span class="demo-badge">Demo</span>
-        </div>
-        <div class="demo-card-accent"></div>
-        <h2>Full auth flow</h2>
-        <p>Reconnect the server and walk through the 401, metadata discovery, Entra sign-in, and authenticated retry.</p>
-    </div>
-    <aside class="notes">
-        Disconnect the MCP server, then reconnect. Show the 401 → PRM discovery → Entra login → authenticated request flow. Show the server logs to confirm no proxy endpoints were hit.
-    </aside>
-</section>
-
-<!-- ==========================================
-     SECTION: COSMOS DB INTEGRATION
-     ========================================== -->
-<section class="heading-only">
-    <h2>Cosmos DB<br>data storage</h2>
-</section>
-
-<section>
-    <h3>Partition key design for per-user data</h3>
-    <div style="display: flex; gap: 20px; align-items: flex-start;">
-        <div style="flex: 1;">
-            <p style="font-size: 0.8em;">Each expense document includes a <code>user_id</code> field set to the Entra Object ID:</p>
-            <pre style="font-size: 0.5em;"><code data-trim data-noescape class="json">
-{
-  "id": "a1b2c3d4-...",
-  "user_id": "00000000-0000-...",
-  "date": "2026-03-31",
-  "amount": 20.00,
-  "category": "food",
-  "description": "Avocado toast",
-  "payment_method": "visa"
-}
-            </code></pre>
-        </div>
-        <div style="flex: 1;">
-            <p style="font-size: 0.8em;">Partition key = <code>/user_id</code></p>
-            <ul style="font-size: 0.7em;">
-                <li>All of a user's expenses are in the <strong>same partition</strong></li>
-                <li>Queries with <code>WHERE user_id = @uid</code> are <strong>single-partition</strong> (fast)</li>
-                <li>Users <strong>cannot read</strong> other users' partitions</li>
-                <li>Cross-partition queries only needed for admin stats</li>
-            </ul>
-        </div>
-    </div>
-    <aside class="notes">
-        The partition key is the user_id from the Entra OID. This means all of a user's expenses live in the same logical partition. Queries filtered by user_id are single-partition and very efficient. Cross-partition queries are only used for admin-level aggregate stats.
-    </aside>
-</section>
-
-<section>
-    <h3>Setting up the Cosmos DB client</h3>
-    <p style="margin-top: 6px;">Use <code>azure-cosmos</code> for easy Python integration with Cosmos DB:</p>
-
-    <pre style="font-size: 0.67em; height:530px;"><code data-trim data-noescape class="python">
-from azure.cosmos.aio import CosmosClient
-from azure.identity.aio import ManagedIdentityCredential
-
-azure_credential = ManagedIdentityCredential(
-  client_id=os.environ["AZURE_CLIENT_ID"])
-
-cosmos_client = CosmosClient(
-  url=f"https://{os.environ['AZURE_COSMOSDB_ACCOUNT']}.documents.azure.com/",
-  credential=azure_credential,
-)
-cosmos_db = cosmos_client.get_database_client(
-    os.environ["AZURE_COSMOSDB_DATABASE"])
-cosmos_container = cosmos_db.get_container_client(
-    os.environ["AZURE_COSMOSDB_USER_CONTAINER"])
-    </code></pre>
-    <p>🔒 Cosmos DB supports keyless access via managed identity.</p>
-    <aside class="notes">
-        The Cosmos DB client uses managed identity in production and the azd CLI credential for local development. No connection strings or secrets. The container is configured with user_id as the partition key.
-    </aside>
-</section>
 
 <section>
     <h3>Extracting user identity from the token</h3>
@@ -1190,96 +1244,17 @@ mcp = FastMCP("Expenses Tracker", auth=auth,
     </aside>
 </section>
 
-<section>
-    <h3>Tool: add_user_expense</h3>
-    <pre style="font-size: 0.6em; height:730px;"><code data-trim data-noescape class="python">
-@mcp.tool
-async def add_user_expense(
-    date: Annotated[date, "Date of the expense in YYYY-MM-DD format"],
-    amount: Annotated[float, "Positive numeric amount of the expense"],
-    category: Annotated[Category, "Category label"],
-    description: Annotated[str, "Human-readable description of the expense"],
-    payment_method: Annotated[PaymentMethod, "Payment method used"],
-    ctx: Context,
-):
-    """Add a new expense to Cosmos DB."""
-    user_id = await ctx.get_state("user_id")
-    if not user_id:
-        return "Error: Authentication required"
-    expense_item = {
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "date": date.isoformat(),
-        "amount": amount,
-        "category": category.value,
-        "description": description,
-        "payment_method": payment_method.value,
-    }
-    await cosmos_container.create_item(body=expense_item)
-    return f"Successfully added expense: ${amount} for {description}"
-    </code></pre>
-    <aside class="notes">
-        The tool uses typed Annotated parameters so the LLM knows exactly what to fill in. The user_id comes from middleware (extracted from the JWT). The expense document includes the user_id as both a field and the partition key value.
-    </aside>
-</section>
-
-<section>
-    <h3>Tool: get_user_expenses</h3>
-    <pre style="font-size: 0.58em; height:610px;"><code data-trim data-noescape class="python">
-@mcp.tool
-async def get_user_expenses(ctx: Context):
-    """Get the authenticated user's expense data from Cosmos DB."""
-    user_id = await ctx.get_state("user_id")
-    if not user_id:
-        return "Error: Authentication required"
-
-    query = "SELECT * FROM c WHERE c.user_id = @uid ORDER BY c.date DESC"
-    parameters = [{"name": "@uid", "value": user_id}]
-    expenses_data = []
-    async for item in cosmos_container.query_items(
-        query=query, parameters=parameters, partition_key=user_id
-    ):
-        expenses_data.append(item)
-
-    return json.dumps([{
-        "date": e.get("date"), "amount": e.get("amount"),
-        "category": e.get("category"), "description": e.get("description"),
-        "payment_method": e.get("payment_method"),
-    } for e in expenses_data], indent=2)
-    </code></pre>
-    <p style="font-size: 0.7em;">Passing <code>partition_key=user_id</code> makes this a <strong>single-partition query</strong>.</p>
-    <aside class="notes">
-        The query filters by user_id and passes the partition key to the SDK, making it a single-partition read. Parameterized queries prevent injection. The result is JSON that the LLM can summarize or analyze.
-    </aside>
-</section>
-
 <section class="demo-slide demo-card">
     <div class="demo-card-shell">
         <div class="demo-card-meta">
             <span class="demo-badge">Demo</span>
         </div>
         <div class="demo-card-accent"></div>
-        <h2>Explore Cosmos DB data</h2>
-        <p>Use the <a target="_blank" href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-cosmosdb"><strong>Azure Cosmos DB for VS Code extension</strong></a><br>to browse databases, inspect documents, and run queries directly in VS Code.</p>
+        <h2>Full auth flow</h2>
+        <p>Reconnect the server and walk through the 401, metadata discovery, Entra sign-in, and authenticated retry.</p>
     </div>
     <aside class="notes">
-        Show the Azure Cosmos DB extension for VS Code, identifier `ms-azuretools.vscode-cosmosdb`. Browse the container, inspect document structure and partition key values, then query for a specific user's expenses. Show how different users have isolated data.
-    </aside>
-</section>
-
-<section class="demo-slide demo-card">
-    <div class="demo-card-shell">
-        <div class="demo-card-meta">
-            <span class="demo-badge">Demo</span>
-        </div>
-        <div class="demo-card-accent"></div>
-        <h2>Chat with Cosmos DB</h2>
-        <p>Use the <a target="_blank" href="https://learn.microsoft.com/azure/developer/azure-mcp-server/tools/azure-cosmos-db">Azure MCP server</a><br>
-         to interact with your data<br>using natural language queries.
-        </p>
-    </div>
-    <aside class="notes">
-        Use GitHub Copilot with the Cosmos DB MCP server installed. Show how you can ask questions about your data, explore the schema, and get insights — all through natural language.
+        Disconnect the MCP server, then reconnect. Show the 401 → PRM discovery → Entra login → authenticated request flow. Show the server logs to confirm no proxy endpoints were hit.
     </aside>
 </section>
 
@@ -1287,7 +1262,7 @@ async def get_user_expenses(ctx: Context):
      SECTION: ROLE-BASED ACCESS
      ========================================== -->
 <section class="heading-only">
-    <h2>Role-based access with<br>Microsoft Graph</h2>
+    <h2>Adding role-based access<br>with Microsoft Graph</h2>
 </section>
 
 <section>
@@ -1312,7 +1287,7 @@ async def get_user_expenses(ctx: Context):
 
 <section>
     <h3>On-Behalf-Of (OBO) flow for Graph API</h3>
-    <svg viewBox="0 0 1100 660" style="width: 100%; max-width: 1100px; height: auto; margin-top: 6px;">
+    <svg viewBox="0 0 1100 590" style="width: 100%; max-width: 1100px; height: auto; margin-top: 6px;">
         <text x="120" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#3a73ae">MCP client</text>
         <text x="390" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#b86d12">MCP server</text>
         <text x="680" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" fill="#6aa33c">Entra</text>
@@ -1338,44 +1313,44 @@ async def get_user_expenses(ctx: Context):
         <line x1="973" y1="23" x2="973" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
         <line x1="989" y1="23" x2="989" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
 
-        <line x1="120" y1="98" x2="120" y2="642" stroke="#d4e3f4" stroke-width="16" stroke-linecap="round"/>
-        <line x1="390" y1="98" x2="390" y2="642" stroke="#f7e7c6" stroke-width="16" stroke-linecap="round"/>
-        <line x1="680" y1="98" x2="680" y2="642" stroke="#dff0bf" stroke-width="16" stroke-linecap="round"/>
-        <line x1="980" y1="98" x2="980" y2="642" stroke="#cdeeed" stroke-width="16" stroke-linecap="round"/>
+        <line x1="120" y1="98" x2="120" y2="576" stroke="#d4e3f4" stroke-width="16" stroke-linecap="round"/>
+        <line x1="390" y1="98" x2="390" y2="576" stroke="#f7e7c6" stroke-width="16" stroke-linecap="round"/>
+        <line x1="680" y1="98" x2="680" y2="576" stroke="#dff0bf" stroke-width="16" stroke-linecap="round"/>
+        <line x1="980" y1="98" x2="980" y2="576" stroke="#cdeeed" stroke-width="16" stroke-linecap="round"/>
 
-        <line x1="128" y1="166" x2="371" y2="166" stroke="#3a73ae" stroke-width="4"/>
-        <polygon points="371,156 371,176 390,166" fill="#3a73ae"/>
-        <text x="250" y="154" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#3a73ae">tools/list or admin tool call</text>
+        <line x1="128" y1="150" x2="371" y2="150" stroke="#3a73ae" stroke-width="4"/>
+        <polygon points="371,140 371,160 390,150" fill="#3a73ae"/>
+        <text x="250" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#3a73ae">tools/list or admin tool call</text>
 
-        <line x1="398" y1="258" x2="661" y2="258" stroke="#b86d12" stroke-width="4"/>
-        <polygon points="661,248 661,268 680,258" fill="#b86d12"/>
-        <text x="530" y="244" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">OBO exchange using user token</text>
+        <line x1="398" y1="222" x2="661" y2="222" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="661,212 661,232 680,222" fill="#b86d12"/>
+        <text x="530" y="208" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">OBO exchange using user token</text>
 
-        <line x1="672" y1="346" x2="409" y2="346" stroke="#7aa93c" stroke-width="4"/>
-        <polygon points="409,336 409,356 390,346" fill="#7aa93c"/>
-        <text x="530" y="332" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#7aa93c">returns Graph access token</text>
+        <line x1="672" y1="292" x2="409" y2="292" stroke="#7aa93c" stroke-width="4"/>
+        <polygon points="409,282 409,302 390,292" fill="#7aa93c"/>
+        <text x="530" y="278" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#7aa93c">returns Graph access token</text>
 
-        <line x1="398" y1="438" x2="961" y2="438" stroke="#b86d12" stroke-width="4"/>
-        <polygon points="961,428 961,448 980,438" fill="#b86d12"/>
-        <text x="680" y="424" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">check transitive group membership</text>
+        <line x1="398" y1="362" x2="961" y2="362" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="961,352 961,372 980,362" fill="#b86d12"/>
+        <text x="680" y="348" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#b86d12">check transitive group membership</text>
 
-        <line x1="972" y1="526" x2="409" y2="526" stroke="#0f766e" stroke-width="4"/>
-        <polygon points="409,516 409,536 390,526" fill="#0f766e"/>
-        <text x="680" y="512" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#0f766e">member or not?</text>
+        <line x1="972" y1="430" x2="409" y2="430" stroke="#0f766e" stroke-width="4"/>
+        <polygon points="409,420 409,440 390,430" fill="#0f766e"/>
+        <text x="680" y="416" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#0f766e">member or not?</text>
 
-        <line x1="382" y1="578" x2="348" y2="578" stroke="#b86d12" stroke-width="4"/>
-        <line x1="164" y1="578" x2="139" y2="578" stroke="#b86d12" stroke-width="4"/>
-        <polygon points="139,568 139,588 120,578" fill="#b86d12"/>
-        <rect x="164" y="554" width="184" height="48" rx="12" fill="#f7fbef" stroke="#9ecf55" stroke-dasharray="6 4"/>
-        <text x="256" y="574" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">if member  ✓</text>
-        <text x="256" y="593" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">show tool / allow call</text>
+        <line x1="382" y1="490" x2="348" y2="490" stroke="#b86d12" stroke-width="4"/>
+        <line x1="164" y1="490" x2="139" y2="490" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="139,480 139,500 120,490" fill="#b86d12"/>
+        <rect x="164" y="468" width="184" height="44" rx="12" fill="#f7fbef" stroke="#9ecf55" stroke-dasharray="6 4"/>
+        <text x="256" y="486" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">if member  ✓</text>
+        <text x="256" y="503" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#5c922b">show tool / allow call</text>
 
-        <line x1="382" y1="636" x2="348" y2="636" stroke="#b86d12" stroke-width="4"/>
-        <line x1="164" y1="636" x2="139" y2="636" stroke="#b86d12" stroke-width="4"/>
-        <polygon points="139,626 139,646 120,636" fill="#b86d12"/>
-        <rect x="164" y="612" width="184" height="48" rx="12" fill="#fff1f0" stroke="#e26d5a" stroke-dasharray="6 4"/>
-        <text x="256" y="632" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">if not  ✕</text>
-        <text x="256" y="651" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">hide tool / block call</text>
+        <line x1="382" y1="540" x2="348" y2="540" stroke="#b86d12" stroke-width="4"/>
+        <line x1="164" y1="540" x2="139" y2="540" stroke="#b86d12" stroke-width="4"/>
+        <polygon points="139,530 139,550 120,540" fill="#b86d12"/>
+        <rect x="164" y="518" width="184" height="44" rx="12" fill="#fff1f0" stroke="#e26d5a" stroke-dasharray="6 4"/>
+        <text x="256" y="536" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">if not  ✕</text>
+        <text x="256" y="553" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#c54e3d">hide tool / block call</text>
     </svg>
     <aside class="notes">
         This is the same role-check flow used during tools listing and again at invocation time. The MCP client either asks for the tools list or attempts an admin tool call. The MCP server uses OBO to exchange the user's token for a Graph token, calls Microsoft Graph to check transitive membership in the admin group, and then either shows or runs the admin tool, or hides and blocks it.
@@ -1385,7 +1360,7 @@ async def get_user_expenses(ctx: Context):
 <section>
     <h3>Checking group membership via Graph API</h3>
     <p style="font-size: 0.74em;">The server uses MSAL for token exchange, then Graph API to check group membership:</p>
-    <pre style="font-size: 0.53em; height: 600px;"><code data-trim data-noescape class="python">
+    <pre style="font-size: 0.53em; height: 580px;"><code data-trim data-noescape class="python">
 confidential_client = ConfidentialClientApplication(
     client_id=entra_client_id,
     client_credential=client_credential,
@@ -1405,8 +1380,7 @@ response = await client.get(
     headers={
         "Authorization": f"Bearer {graph_token['access_token']}",
         "ConsistencyLevel": "eventual",
-    },
-)
+    })
 is_admin = response.json().get("@odata.count", 0) > 0</code></pre>
     <aside class="notes">
         This is the core OBO pattern. The server starts from an existing confidential client, exchanges the user's token for a Graph token, and then calls Graph to check transitive group membership. The ConsistencyLevel: eventual header is required for count-based membership queries.
@@ -1416,9 +1390,9 @@ is_admin = response.json().get("@odata.count", 0) > 0</code></pre>
 <section>
     <h3>Enforcing role-based access in tools</h3>
 
-    <p>FastMCP runs this auth check at both tools listing time <br><em>and</em> tool invocation time:</p>
+    <p style="font-size: 0.9em;">FastMCP runs this auth check at both tools listing time <br><em>and</em> tool invocation time:</p>
 
-    <pre style="font-size: 0.7em; height:500px;"><code data-trim data-noescape class="python">
+    <pre style="font-size: 0.7em; height:490px;"><code data-trim data-noescape class="python">
 async def require_admin_group(ctx: AuthContext) -> bool:
     admin_group_id = os.environ["ENTRA_ADMIN_GROUP_ID"]
     graph_token = confidential_client.acquire_token_on_behalf_of(
@@ -1446,7 +1420,7 @@ async def get_expense_stats(ctx: Context):
         </div>
         <div class="demo-card-accent"></div>
         <h2>Role-based access</h2>
-        <p>Admin vs. regular user tool visibility</p>
+        <p>Admin tool visibility</p>
     </div>
     <aside class="notes">
         Show that an admin user can see and use the get_expense_stats tool. Switch to a non-admin user and show the tool is hidden. Try to call it directly — it's blocked.
@@ -1466,11 +1440,16 @@ async def get_expense_stats(ctx: Context):
         <li>Validate data model choices</li>
         <li>Check SDK usage patterns</li>
     </ul>
-    <blockquote style="font-size: 0.7em;">
+    <blockquote style="font-size: 0.7em; text-align: left;">
         "Review my Cosmos DB data model and suggest improvements"
     </blockquote>
+    <p style="font-size: 0.9em;">Install the skills:</p>
+    <pre style="font-size: 0.8em; width: fit-content;"><code>npx skills add AzureCosmosDB/cosmosdb-agent-kit</code></pre>
+    <p style="font-size: 0.9em;">
+        <a target="_blank" href="https://github.com/AzureCosmosDB/cosmosdb-agent-kit">github.com/AzureCosmosDB/cosmosdb-agent-kit</a>
+    </p>
     <aside class="notes">
-        Agent skills give Copilot domain-specific knowledge about Cosmos DB best practices. Ask it to review your data model, partition key design, or query patterns for optimization suggestions.
+        Agent skills give Copilot domain-specific knowledge about Cosmos DB best practices. Ask it to review your data model, partition key design, or query patterns for optimization suggestions. Install the extension from the cosmosdb-agent-kit repo.
     </aside>
 </section>
 
@@ -1480,7 +1459,7 @@ async def get_expense_stats(ctx: Context):
             <span class="demo-badge">Demo</span>
         </div>
         <div class="demo-card-accent"></div>
-        <h2>Copilot agent skills</h2>
+        <h2>Using agent skills in Copilot</h2>
         <p>Reviewing Cosmos DB data model<br>and optimizing queries</p>
     </div>
     <aside class="notes">
@@ -1489,17 +1468,18 @@ async def get_expense_stats(ctx: Context):
 </section>
 
 
-<!-- ==========================================
-     THANK YOU
-     ========================================== -->
 <section>
     <h3>Thank you!</h3>
-    <p>Slides: <a target="_blank" href="https://aka.ms/pythonmcp/slides/cosmosdb">aka.ms/pythonmcp/slides/cosmosdb</a></p>
-    <p>Code: <a target="_blank" href="https://aka.ms/python-mcp-cosmosdb">aka.ms/python-mcp-cosmosdb</a></p>
-    <p>Previous sessions: <a target="_blank" href="https://aka.ms/pythonmcp/resources">aka.ms/pythonmcp/resources</a></p>
+    <p>Slides: <a target="_blank" href="https://aka.ms/cosmos-identity-mcp/slides">aka.ms/cosmos-identity-mcp/slides</a></p>
+    <p>Code: <a target="_blank" href="https://aka.ms/cosmos-identity-mcp/code">aka.ms/cosmos-identity-mcp/code</a></p>
+    
+    <p>Learn more from Python + MCP livestream series: <a target="_blank" href="https://aka.ms/pythonmcp/rewatch">aka.ms/pythonmcp/rewatch</a></p>
     <p>Questions? Find me online:</p>
     <table style="width:60%; float: left; font-size:28px;">
+        <tr><td>Twitter</td><td><a target="_blank" href="https://x.com/pamelafox">@pamelafox</a></td></tr>
         <tr><td>BlueSky</td><td><a target="_blank" href="https://bsky.app/profile/pamelafox.bsky.social">@pamelafox.bsky.social</a></td></tr>
+        <tr><td>Mastodon</td><td><a target="_blank" href="https://fosstodon.org/@pamelafox">@pamelafox@fosstodon.org</a></td></tr>
+        <tr><td>LinkedIn</td><td><a target="_blank" href="https://www.linkedin.com/in/pamela-s-fox/">pamela-s-fox</a></td></tr>
         <tr><td>GitHub</td><td><a target="_blank" href="https://github.com/pamelafox">github.com/pamelafox</a></td></tr>
     </table>
 </section>

@@ -193,6 +193,10 @@ To use the MCP server with GitHub Copilot Chat in VS Code:
 
 ## Resources
 
+- [FastMCP](https://gofastmcp.com/getting-started/welcome) - Python framework for the MCP server implementation
+- [Azure Cosmos DB](https://azure.microsoft.com/en-us/products/cosmos-db) - Stores per-user expense data with partitioning by user ID
+- [Microsoft Entra ID](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id) - Handles user authentication and issues the OAuth access token
+- [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview) - Checks directory data after sign-in, including admin group membership
 - [Video series: Python + MCP (December 2025)](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402)
 - [MCP for beginners: Online tutorial](https://github.com/microsoft/mcp-for-beginners)
 - [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python)
