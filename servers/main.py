@@ -21,7 +21,7 @@ import httpx
 import requests
 from azure.core.settings import settings
 from azure.cosmos.aio import CosmosClient
-from azure.identity.aio import AzureDeveloperCliCredential, DefaultAzureCredential, ManagedIdentityCredential
+from azure.identity.aio import AzureDeveloperCliCredential, ManagedIdentityCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 from dotenv import load_dotenv
 from fastmcp import Context, FastMCP
@@ -29,7 +29,6 @@ from fastmcp.server.auth import AuthContext, RemoteAuthProvider
 from fastmcp.server.auth.providers.azure import AzureJWTVerifier
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import Middleware, MiddlewareContext
-from fastmcp.tools import ToolResult
 from msal import ConfidentialClientApplication, ManagedIdentityClient, TokenCache, UserAssignedManagedIdentity
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
 from rich.console import Console

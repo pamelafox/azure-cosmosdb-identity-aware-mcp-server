@@ -121,17 +121,6 @@ def make_app_body(display_name: str) -> Application:
     return Application(
         display_name=display_name,
         sign_in_audience="AzureADMyOrg",
-        web=WebApplication(
-            redirect_uris=["https://vscode.dev/redirect", "http://localhost"],
-        ),
-        # Declares Graph API permissions on the app registration--
-        # Not strictly needed as admin consent is granted programmatically later
-        required_resource_access=[
-            RequiredResourceAccess(
-                resource_app_id=GRAPH_APP_ID,
-                resource_access=GRAPH_SCOPES,
-            )
-        ],
         api=ApiApplication(
             requested_access_token_version=2,
             oauth2_permission_scopes=[
