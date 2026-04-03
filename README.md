@@ -1,6 +1,6 @@
 # Identity-Aware MCP Server with Azure Cosmos DB
 
-A Python MCP server that authenticates users via Microsoft Entra ID and stores per-user data in Azure Cosmos DB, deployed to Azure Container Apps.
+A Python MCP server built with [FastMCP](https://gofastmcp.com/getting-started/welcome) that authenticates users via [Microsoft Entra ID](https://www.microsoft.com/security/business/identity-access/microsoft-entra-id) and stores user data in [Azure Cosmos DB](https://azure.microsoft.com/products/cosmos-db). The server includes admin-visible tools enabled via an Entra group membership check powered by the [Microsoft Graph API](https://learn.microsoft.com/graph/overview). The project includes infrastructure for deployment to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
 ## Table of Contents
 
@@ -193,10 +193,8 @@ To use the MCP server with GitHub Copilot Chat in VS Code:
 
 ## Resources
 
-- [FastMCP](https://gofastmcp.com/getting-started/welcome) - Python framework for the MCP server implementation
-- [Azure Cosmos DB](https://azure.microsoft.com/en-us/products/cosmos-db) - Stores per-user expense data with partitioning by user ID
-- [Microsoft Entra ID](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id) - Handles user authentication and issues the OAuth access token
-- [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview) - Checks directory data after sign-in, including admin group membership
-- [Video series: Python + MCP (December 2025)](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402)
-- [MCP for beginners: Online tutorial](https://github.com/microsoft/mcp-for-beginners)
-- [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python)
+- [Know your user: Identity-aware MCP servers with Cosmos DB](https://pamelafox.github.io/azure-cosmosdb-identity-aware-mcp-server/): Slides about this project, for Azure Cosmos DB Conference 2026
+- [Building MCP servers with Entra ID and pre-authorized clients](https://blog.pamelafox.org/2026/04/building-mcp-servers-with-entra-id-and.html): Blog post about the auth setup for this project
+- [Python + MCP](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402): December 2025 ideo series, recordings and slides available
+- [MCP for beginners](https://github.com/microsoft/mcp-for-beginners): Online tutorial
+- [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python): Code sample for similar approach
