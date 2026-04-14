@@ -195,6 +195,6 @@ To use the MCP server with GitHub Copilot Chat in VS Code:
 
 - [Know your user: Identity-aware MCP servers with Cosmos DB](https://pamelafox.github.io/azure-cosmosdb-identity-aware-mcp-server/): Slides about this project, for Azure Cosmos DB Conference 2026
 - [Building MCP servers with Entra ID and pre-authorized clients](https://blog.pamelafox.org/2026/04/building-mcp-servers-with-entra-id-and.html): Blog post about the auth setup for this project
-- [Python + MCP](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402): December 2025 ideo series, recordings and slides available
+- [Python + MCP](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/learn-how-to-build-mcp-servers-with-python-and-azure/4479402): December 2025 video series, recordings and slides available
 - [MCP for beginners](https://github.com/microsoft/mcp-for-beginners): Online tutorial
 - [Python MCP servers on Azure Functions](https://github.com/Azure-Samples/mcp-sdk-functions-hosting-python): Code sample for similar approach
